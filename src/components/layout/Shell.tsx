@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { useDemo } from "../providers/DemoProvider";
 
 type Item = { href: string; label: string; ikon: React.ReactNode; ketuaOnly?: boolean };
@@ -89,11 +91,20 @@ function KerangkaMemuat() {
   );
 }
 
+function logout(router: ReturnType<typeof useRouter>, setKonfirmasiLogout: (v: boolean) => void, setMenuProfil: (v: boolean) => void) {
+  setKonfirmasiLogout(false);
+  setMenuProfil(false);
+  router.push("/login");
+  router.refresh();
+}
+
+
 function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketua" | "warga" }) {
   const { penggunaAktif, state, gantiPeran, siap } = useDemo();
   const pathname = usePathname();
   const router = useRouter();
   const [menuProfil, setMenuProfil] = useState(false);
+  const [konfirmasiLogout, setKonfirmasiLogout] = useState(false);
   const isKetua = penggunaAktif.role === "ketua";
 
   // Area aktif mengikuti layout rute, bukan peran sesi: Ketua RT pun bisa
@@ -123,6 +134,10 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
     gantiPeran(role);
     setMenuProfil(false);
     router.push(role === "ketua" ? "/admin/ringkasan" : "/warga/ringkasan");
+  }
+
+  function keluar() {
+    logout(router, setKonfirmasiLogout, setMenuProfil);
   }
 
   const wargaPertama = state.pengguna.find((p) => p.role === "warga")?.nama.split(" ")[0] ?? "warga";
@@ -236,6 +251,7 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
           setMenuProfil={setMenuProfil}
           ganti={ganti}
           awalan={awalan}
+          onLogout={() => setKonfirmasiLogout(true)}
         />
         <main id="konten-utama" className="flex-1 px-4 pb-24 pt-4 md:px-8 md:pb-10 md:pt-6">
           <div className={`mx-auto w-full ${awalan === "/admin" ? "max-w-[1180px]" : "max-w-[1080px]"}`}>
@@ -245,6 +261,18 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
       </div>
 
       <TabBar menu={menuMobile} belumDibaca={belumDibaca} siap={siap} kolom={kolomTab} />
+      <Dialog
+        buka={konfirmasiLogout}
+        onTutup={() => setKonfirmasiLogout(false)}
+        judul="Keluar dari sesi demo?"
+        deskripsi={`Kamu akan keluar sebagai ${penggunaAktif.nama}. Tidak ada akun atau data ronda yang dihapus.`}
+        aksi={
+          <>
+            <Button onClick={() => setKonfirmasiLogout(false)}>Batal</Button>
+            <Button varian="bahaya" onClick={keluar}>Ya, keluar</Button>
+          </>
+        }
+      />
     </div>
   );
 }
@@ -259,6 +287,7 @@ function Header({
   setMenuProfil,
   ganti,
   awalan,
+  onLogout,
 }: {
   isKetua: boolean;
   wargaPertama: string;
@@ -269,6 +298,7 @@ function Header({
   setMenuProfil: (v: boolean) => void;
   ganti: (r: "ketua" | "warga") => void;
   awalan: string;
+  onLogout: () => void;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-canvas/95 backdrop-blur md:bg-surface">
@@ -351,6 +381,13 @@ function Header({
                       className="flex min-h-9 w-full items-center rounded-md px-2.5 text-[13px] text-ink hover:bg-neutral-soft"
                     >
                       Masuk sebagai {isKetua ? `warga (${wargaPertama})` : "Ketua RT"}
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={onLogout}
+                      className="flex min-h-9 w-full items-center rounded-md px-2.5 text-left text-[13px] text-danger hover:bg-[#fbefee]"
+                    >
+                      Keluar
                     </button>
                   </div>
                   <p className="border-t border-line px-3.5 py-2 text-[11px] leading-4 text-muted">
