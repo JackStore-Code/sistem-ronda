@@ -9,6 +9,15 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+/** Hanya izinkan alamat internal aplikasi; selain itu arahkan ke beranda. */
+function alamatAman(tautan) {
+  if (!tautan || typeof tautan !== "string") return "/";
+  // Tautan dari database berbentuk "jadwal/<id>" atau "pertukaran/<kode>".
+  if (tautan.startsWith("/")) return tautan;
+  if (/^(jadwal|pertukaran|notifikasi)\//.test(tautan)) return `/${tautan}`;
+  return "/";
+}
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -24,7 +33,7 @@ self.addEventListener("push", (event) => {
     badge: "/ikon-192.png",
     tag: data.tag || "ronda-warga",
     renotify: true,
-    data: { tautan: data.tautan || "/" },
+    data: { tautan: alamatAman(data.tautan) },
     vibrate: [80, 40, 80],
   };
 
@@ -33,7 +42,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const tautan = event.notification.data?.tautan || "/";
+  const tautan = alamatAman(event.notification.data?.tautan);
 
   event.waitUntil(
     (async () => {
