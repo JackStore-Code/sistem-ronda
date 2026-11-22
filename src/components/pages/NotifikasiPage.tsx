@@ -2,16 +2,25 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { KategoriBadge } from "@/components/ui/Badges";
 import { Button } from "@/components/ui/Button";
 import { Card, EmptyState } from "@/components/ui/Card";
-import { formatWaktuLengkap } from "@/lib/format";
+import { formatJamBerjalan, formatWaktuRelatif } from "@/lib/format";
 import type { Notifikasi } from "@/lib/types";
 
 export function NotifikasiPage() {
   const { state, penggunaAktif, tandaiDibaca, tandaiSemuaDibaca } = useDemo();
   const router = useRouter();
+
+  // Jam berjalan: waktu notifikasi diperbarui tiap detik sehingga terlihat realtime.
+  const [sekarang, setSekarang] = useState<Date | null>(null);
+  useEffect(() => {
+    setSekarang(new Date());
+    const timer = window.setInterval(() => setSekarang(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const milikSaya = state.notifikasi
     .filter((n) => !n.penerimaId || n.penerimaId === penggunaAktif.id)
@@ -88,7 +97,23 @@ export function NotifikasiPage() {
                     <span className="mt-0.5 block text-[12.5px] leading-5 text-muted">{n.pesan}</span>
                     <span className="mt-1.5 flex flex-wrap items-center gap-2">
                       <KategoriBadge kategori={n.kategori} />
-                      <span className="text-[11.5px] text-muted">{formatWaktuLengkap(n.waktu)}</span>
+                      <span className="text-[11.5px] text-muted" title={n.waktu}>
+                        {sekarang ? (
+                          <span className="tabular-nums">
+                            {formatJamBerjalan(n.waktu, sekarang)} WIB
+                            {" · "}
+                            <span suppressHydrationWarning>{formatWaktuRelatif(n.waktu, sekarang)}</span>
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </span>
+                      {sekarang && sekarang.getTime() - new Date(n.waktu).getTime() < 60000 ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-brand">
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" aria-hidden />
+                          langsung
+                        </span>
+                      ) : null}
                     </span>
                   </span>
                   <svg aria-hidden viewBox="0 0 20 20" className="mt-1 h-4 w-4 shrink-0 text-muted">
@@ -102,7 +127,7 @@ export function NotifikasiPage() {
       )}
 
       <p className="px-1 text-[12px] leading-4 text-muted">
-        Notifikasi tampil di dalam aplikasi. Pengiriman WhatsApp atau SMS belum aktif.
+        Notifikasi tampil langsung di aplikasi begitu ada kejadian baru (realtime). Pengiriman WhatsApp atau SMS belum aktif.
       </p>
     </div>
   );

@@ -228,6 +228,27 @@ export function useDataSupabase() {
     };
   }, [siap, muat]);
 
+  // Pengaman: bila siaran realtime tidak sampai (mis. publication belum aktif),
+  // data tetap disegarkan berkala dan saat jendela kembali aktif, sehingga
+  // notifikasi baru tetap muncul tanpa pengguna memuat ulang halaman.
+  useEffect(() => {
+    if (!siap) return;
+    const jeda = 4000;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void muat();
+    }, jeda);
+    const saatFokus = () => {
+      if (document.visibilityState === "visible") void muat();
+    };
+    document.addEventListener("visibilitychange", saatFokus);
+    window.addEventListener("focus", saatFokus);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", saatFokus);
+      window.removeEventListener("focus", saatFokus);
+    };
+  }, [siap, muat]);
+
   const penggunaAktif = useMemo(() => {
     const kosong: Pengguna = {
       id: "",

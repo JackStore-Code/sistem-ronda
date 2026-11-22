@@ -100,10 +100,47 @@ export function formatBulanTahun(iso: string): string {
 }
 
 /** "19 Nov 2026 · 20.15 WIB" */
+/**
+ * Waktu lengkap dalam zona waktu perangkat (WIB untuk pengguna di Indonesia).
+ * Menerima ISO dengan offset/zona (mis. dari database) maupun tanpa zona.
+ */
 export function formatWaktuLengkap(isoDateTime: string): string {
-  const [datePart, timePart] = isoDateTime.split("T");
-  const jam = (timePart ?? "").slice(0, 5).replace(":", ".");
-  return `${formatTanggalRingkas(datePart)} ${toDate(datePart).getFullYear()} · ${jam} WIB`;
+  const d = new Date(isoDateTime);
+  if (Number.isNaN(d.getTime())) return isoDateTime;
+  const jam = `${`${d.getHours()}`.padStart(2, "0")}.${`${d.getMinutes()}`.padStart(2, "0")}`;
+  return `${formatTanggalRingkas(ymd(d))} ${d.getFullYear()} · ${jam} WIB`;
+}
+
+/**
+ * Waktu notifikasi yang berjalan sendiri: "baru saja", "3 menit lalu", dst.,
+ * sebagai ganti jam statis. Perlu `sekarang` dari pemanggil agar bisa
+ * diperbarui tiap detik.
+ */
+export function formatWaktuRelatif(isoDateTime: string, sekarang: Date): string {
+  const d = new Date(isoDateTime);
+  if (Number.isNaN(d.getTime())) return "-";
+  const detik = Math.max(0, Math.floor((sekarang.getTime() - d.getTime()) / 1000));
+  if (detik < 10) return "baru saja";
+  if (detik < 60) return `${detik} detik lalu`;
+  const menit = Math.floor(detik / 60);
+  if (menit < 60) return `${menit} menit lalu`;
+  const jam = Math.floor(menit / 60);
+  if (jam < 24) return `${jam} jam lalu`;
+  const hari = Math.floor(jam / 24);
+  if (hari < 7) return `${hari} hari lalu`;
+  return formatWaktuLengkap(isoDateTime);
+}
+
+/** "14.30" atau "14.30.05" bila baru beberapa menit lalu, untuk penanda realtime. */
+export function formatJamBerjalan(isoDateTime: string, sekarang: Date): string {
+  const d = new Date(isoDateTime);
+  if (Number.isNaN(d.getTime())) return "-";
+  const jam = `${`${d.getHours()}`.padStart(2, "0")}.${`${d.getMinutes()}`.padStart(2, "0")}`;
+  const detikBerlalu = Math.floor((sekarang.getTime() - d.getTime()) / 1000);
+  if (detikBerlalu >= 0 && detikBerlalu < 60) {
+    return `${jam}.${`${d.getSeconds()}`.padStart(2, "0")}`;
+  }
+  return jam;
 }
 
 export function formatJam(timePart: string): string {

@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { ToastHost } from "@/components/ui/Toast";
+import { NotifikasiLangsung } from "@/components/ui/NotifikasiLangsung";
 import { useDemo } from "../providers/DemoProvider";
 
 type Item = { href: string; label: string; ikon: React.ReactNode; ketuaOnly?: boolean };
@@ -240,6 +242,9 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
       </div>
 
       <TabBar menu={menuMobile} belumDibaca={belumDibaca} siap={siap} kolom={kolomTab} />
+      {/* Notifikasi baru langsung muncul sebagai pemberitahuan di pojok layar. */}
+      <NotifikasiLangsung />
+      <ToastHost />
       <Dialog
         buka={konfirmasiLogout}
         onTutup={() => setKonfirmasiLogout(false)}
