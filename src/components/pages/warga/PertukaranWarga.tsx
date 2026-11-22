@@ -139,6 +139,8 @@ export function FormPertukaranWarga() {
 
   const [asalId, setAsalId] = useState(asalParam ?? jadwalSaya[0]?.jadwal.id ?? "");
   const [tujuanId, setTujuanId] = useState("");
+  // Warga tujuan dipilih sendiri oleh pemohon (bukan ditentukan sistem).
+  const [wargaTujuanId, setWargaTujuanId] = useState("");
   const [alasan, setAlasan] = useState("");
   const [galat, setGalat] = useState<Record<string, string>>({});
   const [konfirmasi, setKonfirmasi] = useState(false);
@@ -157,14 +159,20 @@ export function FormPertukaranWarga() {
         .map((d) => state.pengguna.find((p) => p.id === d.wargaId))
         .filter((p): p is NonNullable<typeof p> => Boolean(p) && p!.role === "warga")
     : [];
-  const wargaTujuan = petugasTujuan[0]?.id ?? "";
+  // Pilihan warga tujuan harus tetap sah: masih bertugas pada jadwal tujuan
+  // dan bukan dirinya sendiri. Bila tidak, anggap belum dipilih.
+  const wargaTujuan =
+    wargaTujuanId && petugasTujuan.some((p) => p.id === wargaTujuanId) ? wargaTujuanId : "";
 
   function validasi(): boolean {
     const g: Record<string, string> = {};
     if (!asalId) g.asal = "Pilih jadwal Anda yang ingin ditukar.";
     if (!tujuanId) g.tujuan = "Pilih jadwal tujuan pertukaran.";
     if (asalId && tujuanId && asalId === tujuanId) g.tujuan = "Jadwal tujuan harus berbeda dari jadwal asal.";
-    if (!wargaTujuan && tujuanId) g.tujuan = "Jadwal tujuan tidak memiliki warga lain yang dapat menerima pertukaran.";
+    if (tujuanId && petugasTujuan.length === 0)
+      g.tujuan = "Jadwal tujuan tidak memiliki warga lain yang dapat menerima pertukaran.";
+    if (tujuanId && petugasTujuan.length > 0 && !wargaTujuan)
+      g.wargaTujuan = "Pilih dulu warga yang ingin diajak tukar jadwal.";
     if (alasan.trim().length < 10) g.alasan = "Alasan wajib diisi, minimal 10 karakter.";
     setGalat(g);
     return Object.keys(g).length === 0;
@@ -243,7 +251,11 @@ export function FormPertukaranWarga() {
               <Select
                 id="jadwal-tujuan"
                 value={tujuanId}
-                onChange={(e) => setTujuanId(e.target.value)}
+                onChange={(e) => {
+                  setTujuanId(e.target.value);
+                  setWargaTujuanId("");
+                  setGalat((g) => ({ ...g, tujuan: "", wargaTujuan: "" }));
+                }}
                 galat={galat.tujuan}
               >
                 <option value="">Pilih jadwal tujuan</option>
@@ -254,23 +266,54 @@ export function FormPertukaranWarga() {
                   </option>
                 ))}
               </Select>
-              {tujuan ? (
-                petugasTujuan.length > 0 ? (
-                  <div className="mt-2 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-2.5">
-                    <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-brand">Warga tujuan</p>
-                    <p className="mt-0.5 text-[15px] font-semibold text-ink">{petugasTujuan[0].nama}</p>
-                    <p className="text-[12.5px] text-[#41504a]">
-                      {petugasTujuan[0].noHp}
-                      {petugasTujuan.length > 1
-                        ? ` · juga bertugas: ${petugasTujuan.slice(1).map((p) => p.nama).join(", ")}`
-                        : ""}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="mt-2 rounded-lg border border-[#f0dcbb] bg-attention-soft px-3.5 py-2.5 text-[12.5px] text-attention">
-                    Tidak ada warga lain yang bertugas pada jadwal ini. Pilih jadwal tujuan lain.
+            </Field>
+
+            <Field
+              id="warga-tujuan"
+              label="Tukar dengan warga"
+              wajib
+              galat={galat.wargaTujuan}
+              petunjuk={
+                tujuan
+                  ? `${petugasTujuan.length} warga bertugas pada jadwal ini — pilih salah satu`
+                  : "pilih jadwal tujuan terlebih dahulu"
+              }
+            >
+              <Select
+                id="warga-tujuan"
+                value={wargaTujuan}
+                onChange={(e) => setWargaTujuanId(e.target.value)}
+                galat={galat.wargaTujuan}
+                disabled={!tujuan || petugasTujuan.length === 0}
+              >
+                <option value="">
+                  {!tujuan
+                    ? "Pilih jadwal tujuan dulu"
+                    : petugasTujuan.length === 0
+                      ? "Tidak ada warga yang bisa dipilih"
+                      : "Pilih nama warga"}
+                </option>
+                {petugasTujuan.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nama} · {p.noHp}
+                  </option>
+                ))}
+              </Select>
+              {tujuan && petugasTujuan.length === 0 ? (
+                <p className="mt-2 rounded-lg border border-[#f0dcbb] bg-attention-soft px-3.5 py-2.5 text-[12.5px] text-attention">
+                  Tidak ada warga lain yang bertugas pada jadwal ini. Pilih jadwal tujuan lain.
+                </p>
+              ) : null}
+              {wargaTujuan ? (
+                <div className="mt-2 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-2.5">
+                  <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-brand">Permintaan akan dikirim ke</p>
+                  <p className="mt-0.5 text-[15px] font-semibold text-ink">
+                    {petugasTujuan.find((p) => p.id === wargaTujuan)?.nama}
                   </p>
-                )
+                  <p className="text-[12.5px] text-[#41504a]">
+                    {petugasTujuan.find((p) => p.id === wargaTujuan)?.noHp}
+                  </p>
+                </div>
               ) : null}
             </Field>
 
