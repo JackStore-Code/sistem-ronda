@@ -9,13 +9,18 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-/** Hanya izinkan alamat internal aplikasi; selain itu arahkan ke beranda. */
+/**
+ * Mengubah tautan notifikasi menjadi alamat halaman yang benar.
+ * Di database tautan disimpan singkat ("jadwal/<id>"), sedangkan halaman
+ * sebenarnya berada di bawah area peran ("/warga/jadwal/<id>" atau
+ * "/admin/jadwal/<id>"). Area dipilih dari sesi yang tersimpan di peramban.
+ */
 function alamatAman(tautan) {
   if (!tautan || typeof tautan !== "string") return "/";
-  // Tautan dari database berbentuk "jadwal/<id>" atau "pertukaran/<kode>".
-  if (tautan.startsWith("/")) return tautan;
-  if (/^(jadwal|pertukaran|notifikasi)\//.test(tautan)) return `/${tautan}`;
-  return "/";
+  const bersih = tautan.replace(/^\/+/, "");
+  if (bersih === "" || bersih === "notifikasi") return "/";
+  if (!/^(jadwal|pertukaran)\//.test(bersih)) return "/";
+  return `/__ronda_tujuan?ke=${encodeURIComponent(bersih)}`;
 }
 
 self.addEventListener("push", (event) => {
