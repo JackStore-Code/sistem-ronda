@@ -20,7 +20,7 @@ function alamatAman(tautan) {
   const bersih = tautan.replace(/^\/+/, "");
   if (bersih === "" || bersih === "notifikasi") return "/";
   if (!/^(jadwal|pertukaran)\//.test(bersih)) return "/";
-  return `/__ronda_tujuan?ke=${encodeURIComponent(bersih)}`;
+  return `/buka?ke=${encodeURIComponent(bersih)}`;
 }
 
 self.addEventListener("push", (event) => {

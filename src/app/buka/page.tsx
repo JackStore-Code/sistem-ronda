@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
  * sebenarnya berada di area peran. Halaman ini membaca sesi yang tersimpan di
  * peramban (lewat skrip kecil) lalu mengarahkan ke alamat yang benar.
  *
- * Contoh: /__ronda_tujuan?ke=jadwal%2F<id>
+ * Contoh: /buka?ke=jadwal%2F<id>
  *   -> /warga/jadwal/<id>  (bila sesi warga)
  *   -> /admin/jadwal/<id>  (bila sesi ketua)
  */
