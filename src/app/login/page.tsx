@@ -51,7 +51,7 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-muted">Tulis nama lengkap sesuai data warga, lalu kata sandi akun Anda.</p>
         <form onSubmit={masuk} className="mt-6 space-y-4" noValidate>
           <Field id="nama-login" label="Nama lengkap" wajib>
-            <Input id="nama-login" autoComplete="name" autoCapitalize="words" value={nama} onChange={(e) => { setNama(e.target.value); setPesanGalat(""); }} placeholder="Contoh: Aditya Pratama" required />
+            <Input id="nama-login" autoComplete="name" autoCapitalize="words" value={nama} onChange={(e) => { setNama(e.target.value); setPesanGalat(""); }} placeholder="Masukkan nama lengkap" required />
           </Field>
           <Field id="password-login" label="Kata sandi" wajib>
             <Input id="password-login" type="password" autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setPesanGalat(""); }} placeholder="Kata sandi akun" required />

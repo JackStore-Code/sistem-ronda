@@ -130,8 +130,12 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
   const kolomTab = menuMobile.length > 0 ? menuMobile.length : 1;
 
   const penerima = penggunaAktif.id;
+  // Angka pada lonceng HARUS memakai aturan yang sama dengan daftar di halaman
+  // Notifikasi: hanya notifikasi milik akun ini (atau untuk semua). Sebelumnya
+  // Ketua RT ikut menghitung notifikasi milik warga, sehingga muncul angka
+  // padahal daftarnya kosong.
   const belumDibaca = state.notifikasi.filter(
-    (n) => !n.dibaca && (!n.penerimaId || n.penerimaId === penerima || penggunaAktif.role === "ketua"),
+    (n) => !n.dibaca && (!n.penerimaId || n.penerimaId === penerima),
   ).length;
 
   function keluar() {
