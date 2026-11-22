@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { StatusPertukaranBadge } from "@/components/ui/Badges";
@@ -122,6 +122,7 @@ export function DaftarPertukaranWarga() {
 
 export function FormPertukaranWarga() {
   const { state, penggunaAktif, ajukanPertukaran, tampilkanToast } = useDemo();
+  const router = useRouter();
   const params = useSearchParams();
   const asalParam = params.get("asal");
 
@@ -144,6 +145,8 @@ export function FormPertukaranWarga() {
   const [alasan, setAlasan] = useState("");
   const [galat, setGalat] = useState<Record<string, string>>({});
   const [konfirmasi, setKonfirmasi] = useState(false);
+  // Pengunci: mencegah pengajuan terkirim dua kali bila tombol ditekan berulang.
+  const [mengirim, setMengirim] = useState(false);
 
   const asal = state.jadwal.find((j) => j.id === asalId);
   const tujuan = state.jadwal.find((j) => j.id === tujuanId);
@@ -179,10 +182,13 @@ export function FormPertukaranWarga() {
   }
 
   async function kirim() {
+    // Klik kedua saat proses berjalan diabaikan, supaya tidak terbentuk dua permohonan.
+    if (mengirim) return;
     if (!validasi()) {
       setKonfirmasi(false);
       return;
     }
+    setMengirim(true);
     const res = await ajukanPertukaran({
       pemohonId: penggunaAktif.id,
       wargaTujuanId: wargaTujuan,
@@ -190,13 +196,16 @@ export function FormPertukaranWarga() {
       jadwalTujuanId: tujuanId,
       alasan,
     });
-    setKonfirmasi(false);
     if (!res.ok) {
+      setMengirim(false);
+      setKonfirmasi(false);
       setGalat({ umum: res.pesan ?? "Pengajuan gagal." });
       tampilkanToast(res.pesan ?? "Pengajuan gagal.", "galat");
       return;
     }
-    tampilkanToast("Pengajuan pertukaran dikirim ke warga tujuan.");
+    tampilkanToast("Pengajuan pertukaran terkirim. Menunggu tanggapan warga tujuan.");
+    // Langsung pindah ke daftar pertukaran agar tidak ada kesempatan mengirim ulang.
+    router.push("/warga/pertukaran");
   }
 
   return (
@@ -342,7 +351,9 @@ export function FormPertukaranWarga() {
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
               <ButtonLink href="/warga/pertukaran" varian="tautan">Batal</ButtonLink>
-              <Button type="submit" varian="utama">Kirim pengajuan</Button>
+              <Button type="submit" varian="utama" disabled={mengirim}>
+              {mengirim ? "Mengirim…" : "Kirim pengajuan"}
+            </Button>
             </div>
           </form>
         </Card>
@@ -387,8 +398,12 @@ export function FormPertukaranWarga() {
         deskripsi={`Permintaan dikirim ke ${namaWarga(state, wargaTujuan) || "warga tujuan"}. Setelah disetujui, Ketua RT masih perlu memvalidasi.`}
         aksi={
           <>
-            <Button onClick={() => setKonfirmasi(false)}>Periksa lagi</Button>
-            <Button varian="utama" onClick={kirim}>Ya, kirim</Button>
+            <Button onClick={() => setKonfirmasi(false)} disabled={mengirim}>
+              Periksa lagi
+            </Button>
+            <Button varian="utama" onClick={kirim} disabled={mengirim}>
+              {mengirim ? "Mengirim…" : "Ya, kirim"}
+            </Button>
           </>
         }
       />
