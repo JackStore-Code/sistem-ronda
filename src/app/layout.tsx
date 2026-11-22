@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { DemoProvider } from "@/components/providers/DemoProvider";
@@ -10,8 +10,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Ronda Warga · RT 05 / RW 03 Sukamaju",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Ronda Warga", statusBarStyle: "default" },
   description:
     "Sistem Informasi Manajemen Ronda Malam Berbasis Mobile untuk lingkungan RT.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1e4d3a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

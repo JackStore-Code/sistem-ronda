@@ -3,6 +3,7 @@
 import { useDemo } from "@/components/providers/DemoProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { NotifikasiHp } from "@/components/ui/NotifikasiHp";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { formatJam } from "@/lib/format";
 
@@ -56,6 +57,8 @@ export function PengaturanPage() {
           Keluar dari akun ini
         </Button>
       </Card>
+
+      <NotifikasiHp />
 
       {isKetua ? (
       <Card>

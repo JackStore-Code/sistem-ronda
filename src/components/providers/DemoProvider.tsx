@@ -35,6 +35,8 @@ type DemoContextValue = {
   wargaAktif: Pengguna[];
   masuk: (namaLengkap: string, kataSandi: string) => Promise<{ ok: boolean; pesan?: string; role?: string }>;
   keluarSesi: () => void;
+  /** Token sesi aktif (dipakai untuk mendaftarkan perangkat ke notifikasi HP). */
+  sesiToken: string;
   pilihPengguna: (penggunaId: string) => void;
   simpanJadwal: (input: BuatJadwalInput) => Promise<Hasil>;
   publikasikanJadwal: (jadwalId: string) => Promise<void>;
@@ -100,20 +102,15 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const publikasikanJadwal = useCallback(
     async (jadwalId: string) => {
-      const jadwal = data.jadwal.find((j) => j.id === jadwalId);
-      if (!jadwal) return;
-      const petugas = data.detailJadwal.filter((d) => d.jadwalId === jadwalId).map((d) => d.wargaId);
-      await simpanJadwal({
-        id: jadwalId,
-        tanggal: jadwal.tanggal,
-        waktuMulai: jadwal.waktuMulai,
-        waktuSelesai: jadwal.waktuSelesai,
-        lokasi: jadwal.lokasi,
-        petugasIds: petugas,
-        publikasikan: true,
+      // Memakai fungsi database agar status berubah dan petugas menerima notifikasi.
+      const { error } = await supabase.rpc("publikasi_jadwal", {
+        token_sesi: token,
+        jadwal_id: jadwalId,
       });
+      if (error) tampilkanToast(pesanGalat(error.message), "galat");
+      await muat();
     },
-    [data.jadwal, data.detailJadwal, simpanJadwal],
+    [token, muat, tampilkanToast],
   );
 
   const hapusJadwal = useCallback(
@@ -333,6 +330,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     wargaAktif,
     masuk,
     keluarSesi: keluar,
+    sesiToken: token,
     pilihPengguna,
     simpanJadwal,
     publikasikanJadwal,

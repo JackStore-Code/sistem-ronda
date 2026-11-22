@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { KategoriBadge } from "@/components/ui/Badges";
 import { Button } from "@/components/ui/Button";
+import { NotifikasiHp } from "@/components/ui/NotifikasiHp";
 import { Card, EmptyState } from "@/components/ui/Card";
 import { formatJamBerjalan, formatWaktuRelatif } from "@/lib/format";
 import type { Notifikasi } from "@/lib/types";
@@ -153,6 +154,8 @@ export function PengaturanPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <NotifikasiHp />
+
         <Card>
           <h2 className="text-[15px] font-semibold text-ink">Profil</h2>
           <dl className="mt-3 space-y-2 text-[13px]">

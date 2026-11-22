@@ -1,0 +1,31 @@
+{
+  "name": "Ronda Warga RT 05",
+  "short_name": "Ronda Warga",
+  "description": "Sistem Informasi Manajemen Ronda Malam RT 05 / RW 03 Sukamaju",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#1e4d3a",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/ikon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
