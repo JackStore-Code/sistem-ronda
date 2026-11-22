@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { Dialog } from "@/components/ui/Dialog";
 import { formatJam } from "@/lib/format";
 
-/** Halaman pengaturan bersama kedua peran: identitas, sesi, ringkasan data, dan reset. */
+/** Halaman pengaturan: identitas & sesi untuk semua; ringkasan data khusus Ketua RT. */
 export function PengaturanPage() {
-  const { state, penggunaAktif, keluarSesi, reset, tampilkanToast } = useDemo();
-  const [konfirmasiReset, setKonfirmasiReset] = useState(false);
+  const { state, penggunaAktif, keluarSesi } = useDemo();
   const isKetua = penggunaAktif.role === "ketua";
 
   function keluar() {
@@ -60,8 +57,9 @@ export function PengaturanPage() {
         </Button>
       </Card>
 
+      {isKetua ? (
       <Card>
-        <CardHeader judul="Ringkasan data" keterangan="Jumlah data yang tersimpan saat ini." />
+        <CardHeader judul="Ringkasan data" keterangan="Jumlah data yang tersimpan saat ini. Hanya terlihat oleh Ketua RT." />
         <ul className="mt-3 grid grid-cols-2 gap-2 text-[12.5px] sm:grid-cols-4">
           {[
             ["Jadwal", state.jadwal.length],
@@ -80,38 +78,7 @@ export function PengaturanPage() {
           {formatJam(state.jadwal[0]?.waktuSelesai ?? "02:00")} WIB, kecuali ditentukan lain oleh Ketua RT.
         </p>
       </Card>
-
-      <Card className="border-[#f2cfcc]">
-        <CardHeader
-          judul="Kembalikan ke data awal"
-          keterangan="Menghapus semua perubahan dan memuat ulang data awal."
-        />
-        <Button varian="bahaya" className="mt-3" onClick={() => setKonfirmasiReset(true)}>
-          Reset data
-        </Button>
-      </Card>
-
-      <Dialog
-        buka={konfirmasiReset}
-        onTutup={() => setKonfirmasiReset(false)}
-        judul="Reset seluruh data?"
-        deskripsi="Jadwal, kehadiran, pertukaran, dan notifikasi yang Anda ubah akan dikembalikan ke data awal. Tindakan ini tidak dapat dibatalkan."
-        aksi={
-          <>
-            <Button onClick={() => setKonfirmasiReset(false)}>Batal</Button>
-            <Button
-              varian="bahaya"
-              onClick={() => {
-                reset();
-                setKonfirmasiReset(false);
-                tampilkanToast("Data dikembalikan ke kondisi awal.");
-              }}
-            >
-              Ya, reset
-            </Button>
-          </>
-        }
-      />
+      ) : null}
     </div>
   );
 }

@@ -134,7 +134,7 @@ export function NotifikasiPage() {
 }
 
 export function PengaturanPage() {
-  const { penggunaAktif, reset, tampilkanToast, state } = useDemo();
+  const { penggunaAktif, state } = useDemo();
   const router = useRouter();
   const isKetua = penggunaAktif.role === "ketua";
 
@@ -168,32 +168,20 @@ export function PengaturanPage() {
           </dl>
         </Card>
 
-        <Card>
-          <h2 className="text-[15px] font-semibold text-ink">Ringkasan data</h2>
-          <p className="mt-1 text-[13px] leading-5 text-muted">
-            Kembalikan data ke kondisi awal akan menghapus perubahan yang sudah Anda buat.
-          </p>
-          <div className="mt-3 rounded-lg border border-line bg-[#fbfcfa] px-3.5 py-3 text-[12.5px] text-muted">
-            {state.pengguna.length} pengguna · {state.jadwal.length} jadwal · {state.pertukaran.length} pertukaran ·{" "}
-            {state.notifikasi.length} notifikasi
-          </div>
-          <Button
-            className="mt-3"
-            varian="bahaya"
-            onClick={() => {
-              reset();
-              tampilkanToast("Data dikembalikan ke kondisi awal.");
-            }}
-          >
-            Kembalikan data awal
-          </Button>
-        </Card>
+        {isKetua ? (
+          <Card>
+            <h2 className="text-[15px] font-semibold text-ink">Ringkasan data</h2>
+            <p className="mt-1 text-[13px] leading-5 text-muted">
+              Jumlah data yang tersimpan saat ini. Hanya terlihat oleh Ketua RT.
+            </p>
+            <div className="mt-3 rounded-lg border border-line bg-[#fbfcfa] px-3.5 py-3 text-[12.5px] text-muted">
+              {state.pengguna.length} pengguna · {state.jadwal.length} jadwal · {state.pertukaran.length} pertukaran ·{" "}
+              {state.notifikasi.length} notifikasi
+            </div>
+          </Card>
+        ) : null}
       </div>
 
-      <p className="text-[12px] leading-4 text-muted">
-        Siap dikembangkan ke Supabase: struktur data pada <code className="rounded bg-neutral-soft px-1">src/lib/types.ts</code>{" "}
-        dapat dipetakan langsung menjadi tabel.
-      </p>
       <Link href={isKetua ? "/admin/ringkasan" : "/warga/ringkasan"} className="inline-block text-[12.5px] font-medium text-brand hover:underline">
         ← Kembali ke ringkasan
       </Link>
