@@ -216,13 +216,14 @@ export function DetailPertukaranKetua({ id }: { id: string }) {
             <Button
               varian="utama"
               onClick={() => {
-                const hasil = validasiPertukaran(p.id, true);
+                void validasiPertukaran(p.id, true).then((hasil) => {
                 setAksi(null);
-                if (hasil.ok) {
-                  tampilkanToast("Pertukaran disetujui. Jadwal kedua warga diperbarui.");
-                } else {
-                  tampilkanToast(hasil.pesan ?? "Permohonan belum dapat diproses.", "galat");
-                }
+                  if (hasil.ok) {
+                    tampilkanToast("Pertukaran disetujui. Jadwal kedua warga diperbarui.");
+                  } else {
+                    tampilkanToast(hasil.pesan ?? "Permohonan belum dapat diproses.", "galat");
+                  }
+                });
               }}
             >
               Ya, setujui
@@ -261,7 +262,7 @@ export function DetailPertukaranKetua({ id }: { id: string }) {
                   setGalat("Alasan penolakan wajib diisi (minimal 10 karakter).");
                   return;
                 }
-                validasiPertukaran(p.id, false, alasan);
+                void validasiPertukaran(p.id, false, alasan);
                 setAksi(null);
                 setAlasan("");
                 setGalat("");

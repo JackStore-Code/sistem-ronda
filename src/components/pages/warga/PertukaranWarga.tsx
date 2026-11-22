@@ -131,7 +131,8 @@ export function FormPertukaranWarga() {
         .filter((d) => d.wargaId === penggunaAktif.id)
         .map((d) => ({ detail: d, jadwal: state.jadwal.find((j) => j.id === d.jadwalId) }))
         .filter((x): x is { detail: typeof x.detail; jadwal: NonNullable<typeof x.jadwal> } => Boolean(x.jadwal))
-        .filter((x) => x.jadwal.status === "dipublikasikan")
+        // Jadwal draft tetap boleh ditukar: beberapa warga hanya kebagian jadwal draft,
+        // dan tanpa ini mereka tidak bisa mengajukan pertukaran sama sekali.
         .sort((a, b) => a.jadwal.tanggal.localeCompare(b.jadwal.tanggal)),
     [state, penggunaAktif.id],
   );
@@ -149,14 +150,14 @@ export function FormPertukaranWarga() {
     .filter((j) => j.id !== asalId && j.status === "dipublikasikan")
     .sort((a, b) => a.tanggal.localeCompare(b.tanggal));
 
-  const wargaTujuan = tujuan
-    ? state.pengguna.find(
-        (p) =>
-          p.role === "warga" &&
-          p.id !== penggunaAktif.id &&
-          state.detailJadwal.some((d) => d.jadwalId === tujuan.id && d.wargaId === p.id),
-      )?.id ?? ""
-    : "";
+  // Daftar warga lain yang bertugas pada jadwal tujuan, lengkap dengan namanya.
+  const petugasTujuan = tujuan
+    ? state.detailJadwal
+        .filter((d) => d.jadwalId === tujuan.id && d.wargaId !== penggunaAktif.id)
+        .map((d) => state.pengguna.find((p) => p.id === d.wargaId))
+        .filter((p): p is NonNullable<typeof p> => Boolean(p) && p!.role === "warga")
+    : [];
+  const wargaTujuan = petugasTujuan[0]?.id ?? "";
 
   function validasi(): boolean {
     const g: Record<string, string> = {};
@@ -169,12 +170,12 @@ export function FormPertukaranWarga() {
     return Object.keys(g).length === 0;
   }
 
-  function kirim() {
+  async function kirim() {
     if (!validasi()) {
       setKonfirmasi(false);
       return;
     }
-    const res = ajukanPertukaran({
+    const res = await ajukanPertukaran({
       pemohonId: penggunaAktif.id,
       wargaTujuanId: wargaTujuan,
       jadwalAsalId: asalId,
@@ -201,7 +202,7 @@ export function FormPertukaranWarga() {
         </Link>
         <h1 className="mt-1.5 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Ajukan pertukaran jadwal</h1>
         <p className="mt-1 text-[13px] text-muted">
-          Pilih jadwal Anda dan jadwal tujuan. Warga tujuan harus menyetujui, lalu Ketua RT memvalidasi.
+          Pilih jadwal Anda, lalu pilih jadwal tujuan. Nama warga yang bertugas pada jadwal itu akan tampil di bawahnya, dialah yang menerima permintaan Anda.
         </p>
       </div>
 
@@ -234,8 +235,7 @@ export function FormPertukaranWarga() {
             </Field>
             {jadwalSaya.length === 0 ? (
               <p className="rounded-lg border border-dashed border-line px-3.5 py-3 text-[12.5px] text-muted">
-                Anda belum punya jadwal yang dipublikasikan. Pertukaran hanya bisa diajukan untuk jadwal yang sudah
-                dipublikasikan Ketua RT.
+                Anda belum punya jadwal ronda, jadi belum ada yang bisa ditukar.
               </p>
             ) : null}
 
@@ -250,9 +250,28 @@ export function FormPertukaranWarga() {
                 {kandidatTujuan.map((j) => (
                   <option key={j.id} value={j.id}>
                     {formatTanggalPendek(j.tanggal, false)} · {j.waktuMulai}–{j.waktuSelesai}
+                    {j.status === "draft" ? " (draft)" : ""}
                   </option>
                 ))}
               </Select>
+              {tujuan ? (
+                petugasTujuan.length > 0 ? (
+                  <div className="mt-2 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-2.5">
+                    <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-brand">Warga tujuan</p>
+                    <p className="mt-0.5 text-[15px] font-semibold text-ink">{petugasTujuan[0].nama}</p>
+                    <p className="text-[12.5px] text-[#41504a]">
+                      {petugasTujuan[0].noHp}
+                      {petugasTujuan.length > 1
+                        ? ` · juga bertugas: ${petugasTujuan.slice(1).map((p) => p.nama).join(", ")}`
+                        : ""}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-2 rounded-lg border border-[#f0dcbb] bg-attention-soft px-3.5 py-2.5 text-[12.5px] text-attention">
+                    Tidak ada warga lain yang bertugas pada jadwal ini. Pilih jadwal tujuan lain.
+                  </p>
+                )
+              ) : null}
             </Field>
 
             <Field
@@ -459,7 +478,7 @@ export function DetailPertukaranWarga({ id }: { id: string }) {
             <Button
               varian="utama"
               onClick={() => {
-                tanggapiPertukaran(p.id, true);
+                void tanggapiPertukaran(p.id, true);
                 setAksi(null);
                 tampilkanToast("Anda menyetujui pertukaran. Menunggu validasi Ketua RT.");
               }}
@@ -488,7 +507,7 @@ export function DetailPertukaranWarga({ id }: { id: string }) {
                   setGalat("Alasan penolakan minimal 10 karakter.");
                   return;
                 }
-                tanggapiPertukaran(p.id, false, alasan);
+                void tanggapiPertukaran(p.id, false, alasan);
                 setAksi(null);
                 setAlasan("");
                 setGalat("");

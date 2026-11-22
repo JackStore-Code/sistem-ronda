@@ -6,14 +6,14 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { ToastHost } from "@/components/ui/Toast";
-import { cariAkun } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { state, siap, pilihPengguna, tampilkanToast } = useDemo();
+  const { state, siap, masuk: masukAkun, tampilkanToast } = useDemo();
   const [nama, setNama] = useState("");
   const [password, setPassword] = useState("");
   const [pesanGalat, setPesanGalat] = useState("");
+  const [memproses, setMemproses] = useState(false);
 
   // Sudah masuk: langsung ke area sesuai peran akun (tidak bisa lompat peran).
   const sesiAktif = state.pengguna.find((p) => p.id === state.sesi.penggunaId && p.statusAkun === "aktif");
@@ -23,17 +23,18 @@ export default function LoginPage() {
     }
   }, [siap, sesiAktif, router]);
 
-  function masuk(e: React.FormEvent<HTMLFormElement>) {
+  async function masuk(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const pengguna = cariAkun(state.pengguna, nama, password);
-    if (!pengguna) {
-      const pesan = "Nama lengkap atau kata sandi tidak cocok.";
+    setMemproses(true);
+    const hasil = await masukAkun(nama, password);
+    setMemproses(false);
+    if (!hasil.ok) {
+      const pesan = hasil.pesan ?? "Nama lengkap atau kata sandi tidak cocok.";
       setPesanGalat(pesan);
       tampilkanToast(pesan, "galat");
       return;
     }
-    pilihPengguna(pengguna.id);
-    router.push(pengguna.role === "ketua" ? "/admin/ringkasan" : "/warga/ringkasan");
+    router.push(hasil.role === "ketua" ? "/admin/ringkasan" : "/warga/ringkasan");
   }
 
   return (
@@ -60,7 +61,9 @@ export default function LoginPage() {
               {pesanGalat}
             </p>
           ) : null}
-          <Button type="submit" varian="utama" className="w-full">Masuk</Button>
+          <Button type="submit" varian="utama" className="w-full" disabled={memproses}>
+            {memproses ? "Memeriksa…" : "Masuk"}
+          </Button>
         </form>
         <div className="mt-5 rounded-lg border border-line bg-[#fbfcfa] p-3 text-xs leading-5 text-muted">
           Nama lengkap wajib ditulis utuh; huruf besar/kecil dan spasi ganda tidak berpengaruh. Akun Ketua RT dan akun warga terpisah.

@@ -1,4 +1,9 @@
-import { TODAY } from "./seed";
+/** Tanggal "hari ini" versi lokal, dipakai untuk penanda jadwal dan filter periode. */
+function hariIni(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${`${d.getMonth() + 1}`.padStart(2, "0")}-${`${d.getDate()}`.padStart(2, "0")}`;
+}
+export const TODAY = hariIni();
 import type {
   Aktivitas,
   DetailJadwal,
@@ -51,7 +56,6 @@ export const BULAN_SINGKAT = [
   "Des",
 ] as const;
 
-export { TODAY };
 export const LOKASI_RONDA = "Pos ronda RT 05";
 export const JAM_MULAI = "22.00";
 export const JAM_SELESAI = "02.00";

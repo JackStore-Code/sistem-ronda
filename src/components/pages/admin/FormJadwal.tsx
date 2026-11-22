@@ -55,9 +55,9 @@ export function FormJadwal({ jadwalId }: { jadwalId?: string }) {
     return Object.keys(g).length === 0;
   }
 
-  function simpan(mode: "draf" | "publikasi") {
+  async function simpan(mode: "draf" | "publikasi") {
     if (!validasi()) return;
-    const res = simpanJadwal({
+    const res = await simpanJadwal({
       id: jadwalId,
       tanggal,
       waktuMulai: mulai,
