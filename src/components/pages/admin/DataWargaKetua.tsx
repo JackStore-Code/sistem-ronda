@@ -9,11 +9,14 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select } from "@/components/ui/Field";
 
 export function DataWargaKetua() {
-  const { state, simpanWarga, tampilkanToast } = useDemo();
+  const { state, simpanWarga, ubahStatusWarga, tampilkanToast } = useDemo();
   const [cari, setCari] = useState("");
   const [status, setStatus] = useState<"semua" | "aktif" | "nonaktif">("semua");
   const [form, setForm] = useState<null | { id?: string; nama: string; kataSandi: string; noHp: string; statusAkun: "aktif" | "nonaktif" }>(null);
   const [galat, setGalat] = useState<Record<string, string>>({});
+  // Status akun hanya boleh diubah setelah Ketua RT mengonfirmasi dengan sandinya.
+  const [sandiKonfirmasi, setSandiKonfirmasi] = useState("");
+  const [menyimpan, setMenyimpan] = useState(false);
 
   const daftar = useMemo(() => {
     const q = cari.trim().toLowerCase();
@@ -41,36 +44,86 @@ export function DataWargaKetua() {
       statusAkun: p?.statusAkun ?? "aktif",
     });
     setGalat({});
+    setSandiKonfirmasi("");
   }
 
-  function kirim() {
-    if (!form) return;
+  async function kirim() {
+    if (!form || menyimpan) return;
     const g: Record<string, string> = {};
     if (form.nama.trim().split(/\s+/).filter(Boolean).length < 2)
       g.nama = "Tulis nama lengkap (minimal nama depan dan belakang).";
-    if (form.kataSandi.trim().length < 6) g.kataSandi = "Kata sandi minimal 6 karakter.";
-    if (!/^[a-z0-9]+$/.test(form.kataSandi.trim()))
-      g.kataSandi = "Kata sandi hanya huruf kecil dan angka, tanpa spasi.";
     if (form.noHp.replace(/\D/g, "").length < 9) g.noHp = "Nomor HP tidak valid. Contoh: 0812-0000-0101.";
+
     const rapikan = (v: string) => v.trim().replace(/\s+/g, " ").toLowerCase();
-    const dup = state.pengguna.find(
-      (p) => rapikan(p.nama) === rapikan(form.nama) && p.id !== form.id,
-    );
+    const dup = state.pengguna.find((p) => rapikan(p.nama) === rapikan(form.nama) && p.id !== form.id);
     if (dup) g.nama = "Nama lengkap ini sudah dipakai akun lain — nama dipakai untuk login.";
+
+    // Akun baru wajib punya kata sandi; saat mengedit boleh dikosongkan (tidak diubah).
+    if (!form.id) {
+      if (form.kataSandi.trim().length < 6) g.kataSandi = "Kata sandi minimal 6 karakter.";
+      else if (!/^[a-z0-9]+$/.test(form.kataSandi.trim()))
+        g.kataSandi = "Kata sandi hanya huruf kecil dan angka, tanpa spasi.";
+    } else if (form.kataSandi.trim()) {
+      if (form.kataSandi.trim().length < 6) g.kataSandi = "Kata sandi minimal 6 karakter.";
+      else if (!/^[a-z0-9]+$/.test(form.kataSandi.trim()))
+        g.kataSandi = "Kata sandi hanya huruf kecil dan angka, tanpa spasi.";
+    }
+
+    // Ganti status aktif/nonaktif butuh konfirmasi sandi Ketua RT.
+    const statusBerubah =
+      Boolean(form.id) && state.pengguna.find((p) => p.id === form.id)?.statusAkun !== form.statusAkun;
+    if (statusBerubah && sandiKonfirmasi.trim().length < 6)
+      g.konfirmasi = "Masukkan kata sandi Anda untuk mengonfirmasi perubahan status akun.";
+
     setGalat(g);
     if (Object.keys(g).length > 0) return;
-    const sandi = form.kataSandi.trim().toLowerCase();
+
+    setMenyimpan(true);
+    if (statusBerubah) {
+      const res = await ubahStatusWarga(form.id!, form.statusAkun, sandiKonfirmasi);
+      if (!res.ok) {
+        setMenyimpan(false);
+        setGalat({ konfirmasi: res.pesan ?? "Kata sandi Anda tidak cocok." });
+        tampilkanToast(res.pesan ?? "Kata sandi Anda tidak cocok.", "galat");
+        return;
+      }
+      // Perubahan lain (nama, HP, sandi baru) ikut disimpan bila diisi.
+      const namaBaruStatus = form.nama.trim().replace(/\s+/g, " ");
+      const adaPerubahanLain =
+        namaBaruStatus !== state.pengguna.find((p) => p.id === form.id)?.nama ||
+        form.noHp.trim() !== state.pengguna.find((p) => p.id === form.id)?.noHp ||
+        form.kataSandi.trim().length > 0;
+      if (adaPerubahanLain) {
+        await simpanWarga({
+          id: form.id,
+          nama: namaBaruStatus,
+          username: `@${namaBaruStatus.split(" ")[0].toLowerCase()}`,
+          kataSandi: form.kataSandi.trim(),
+          noHp: form.noHp.trim(),
+          statusAkun: form.statusAkun,
+        });
+      }
+      setMenyimpan(false);
+      tampilkanToast(`Akun ${namaBaruStatus} sekarang ${form.statusAkun}.`);
+      setForm(null);
+      return;
+    }
+
     const namaBaru = form.nama.trim().replace(/\s+/g, " ");
-    simpanWarga({
+    const hasil = await simpanWarga({
       id: form.id,
       nama: namaBaru,
-      // Username hanya label internal; login memakai nama lengkap + kata sandi.
       username: `@${namaBaru.split(" ")[0].toLowerCase()}`,
-      kataSandi: sandi,
+      kataSandi: form.kataSandi.trim(),
       noHp: form.noHp.trim(),
       statusAkun: form.statusAkun,
     });
-    tampilkanToast(form.id ? `Data ${form.nama.trim()} diperbarui.` : `${form.nama.trim()} ditambahkan sebagai warga.`);
+    setMenyimpan(false);
+    if (!hasil.ok) {
+      setGalat({ umum: hasil.pesan ?? "Perubahan gagal disimpan." });
+      return;
+    }
+    tampilkanToast(form.id ? `Data ${namaBaru} diperbarui.` : `${namaBaru} ditambahkan sebagai warga.`);
     setForm(null);
   }
 
@@ -206,15 +259,22 @@ export function DataWargaKetua() {
         deskripsi="Data ini hanya terlihat oleh Ketua RT. Warga tidak dapat menambah anggota sendiri."
         aksi={
           <>
-            <Button onClick={() => setForm(null)}>Batal</Button>
-            <Button varian="utama" onClick={kirim}>
-              {form?.id ? "Simpan perubahan" : "Simpan warga"}
+            <Button onClick={() => setForm(null)} disabled={menyimpan}>
+              Batal
+            </Button>
+            <Button varian="utama" onClick={kirim} disabled={menyimpan}>
+              {menyimpan ? "Menyimpan…" : form?.id ? "Simpan perubahan" : "Simpan warga"}
             </Button>
           </>
         }
       >
         {form ? (
           <div className="space-y-3">
+            {galat.umum ? (
+              <p role="alert" className="rounded-lg border border-[#f2cfcc] bg-danger-soft px-3 py-2 text-[12.5px] font-medium text-danger">
+                {galat.umum}
+              </p>
+            ) : null}
             <Field id="nama-warga" label="Nama lengkap (dipakai login)" wajib galat={galat.nama}>
               <Input
                 id="nama-warga"
@@ -225,13 +285,24 @@ export function DataWargaKetua() {
               />
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field id="sandi-warga" label="Kata sandi" wajib galat={galat.kataSandi} petunjuk="huruf kecil & angka, dipakai bersama nama lengkap">
+              <Field
+                id="sandi-warga"
+                label={form.id ? "Kata sandi baru" : "Kata sandi"}
+                wajib={!form.id}
+                galat={galat.kataSandi}
+                petunjuk={
+                  form.id
+                    ? "kosongkan bila tidak ingin mengganti sandi"
+                    : "huruf kecil & angka, dipakai bersama nama lengkap"
+                }
+              >
                 <Input
                   id="sandi-warga"
                   value={form.kataSandi}
                   galat={galat.kataSandi}
                   onChange={(e) => setForm({ ...form, kataSandi: e.target.value })}
-                  placeholder="aditya142"
+                  placeholder={form.id ? "Kosongkan bila tidak diganti" : "contoh: 2510631250055"}
+                  autoComplete="new-password"
                 />
               </Field>
               <Field id="hp-warga" label="Nomor HP" wajib galat={galat.noHp} petunjuk="untuk notifikasi">
@@ -245,7 +316,7 @@ export function DataWargaKetua() {
                 />
               </Field>
             </div>
-            <Field id="status-akun" label="Status akun">
+            <Field id="status-akun" label="Status akun" petunjuk="nonaktif = tidak bisa login & tidak muncul di pilihan petugas">
               <Select
                 id="status-akun"
                 value={form.statusAkun}
@@ -255,6 +326,27 @@ export function DataWargaKetua() {
                 <option value="nonaktif">Nonaktif</option>
               </Select>
             </Field>
+
+            {form.id &&
+            state.pengguna.find((p) => p.id === form.id)?.statusAkun !== form.statusAkun ? (
+              <Field
+                id="sandi-konfirmasi"
+                label="Konfirmasi kata sandi Anda"
+                wajib
+                galat={galat.konfirmasi}
+                petunjuk={`untuk ${form.statusAkun === "nonaktif" ? "menonaktifkan" : "mengaktifkan kembali"} akun ${form.nama}`}
+              >
+                <Input
+                  id="sandi-konfirmasi"
+                  type="password"
+                  value={sandiKonfirmasi}
+                  galat={galat.konfirmasi}
+                  onChange={(e) => setSandiKonfirmasi(e.target.value)}
+                  placeholder="Kata sandi akun Ketua RT"
+                  autoComplete="current-password"
+                />
+              </Field>
+            ) : null}
           </div>
         ) : null}
       </Dialog>

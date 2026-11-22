@@ -44,7 +44,8 @@ type DemoContextValue = {
   tanggapiPertukaran: (kode: string, setuju: boolean, alasanPenolakan?: string) => Promise<Hasil>;
   batalkanPertukaran: (kode: string) => Promise<void>;
   validasiPertukaran: (kode: string, setuju: boolean, alasanPenolakan?: string) => Promise<Hasil>;
-  simpanWarga: (input: Omit<Pengguna, "id" | "role"> & { id?: string }) => Promise<void>;
+  simpanWarga: (input: Omit<Pengguna, "id" | "role"> & { id?: string }) => Promise<Hasil>;
+  ubahStatusWarga: (wargaId: string, status: "aktif" | "nonaktif", sandiKonfirmasi: string) => Promise<Hasil>;
   tandaiDibaca: (id: string) => Promise<void>;
   tandaiSemuaDibaca: (penerimaId: string) => Promise<void>;
   kirimPengingat: (jadwalId: string) => Promise<void>;
@@ -199,25 +200,80 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
 
   const simpanWarga = useCallback(
-    async (input: Omit<Pengguna, "id" | "role"> & { id?: string }) => {
+    async (input: Omit<Pengguna, "id" | "role"> & { id?: string }): Promise<Hasil> => {
       if (input.id) {
-        const { error } = await supabase
-          .from("pengguna")
-          .update({ nama: input.nama, username: input.username, no_hp: input.noHp, status_akun: input.statusAkun })
-          .eq("id", input.id);
-        if (error) tampilkanToast(pesanGalat(error.message), "galat");
-      } else {
-        const { error } = await supabase.rpc("tambah_warga", {
+        const { error } = await supabase.rpc("ubah_warga", {
           token_sesi: token,
+          warga_id: input.id,
           nama_baru: input.nama,
-          sandi_baru: input.kataSandi,
-          no_hp: input.noHp,
+          no_hp_baru: input.noHp,
+          status_baru: input.statusAkun,
+          // Kosong berarti kata sandi tidak diubah.
+          sandi_baru: input.kataSandi.trim() ? input.kataSandi.trim().toLowerCase() : null,
         });
-        if (error) tampilkanToast(pesanGalat(error.message), "galat");
+        await muat();
+        if (error) {
+          const pesan = pesanGalat(error.message);
+          tampilkanToast(pesan, "galat");
+          return { ok: false, pesan };
+        }
+        return { ok: true };
       }
+
+      const { error } = await supabase.rpc("tambah_warga", {
+        token_sesi: token,
+        nama_baru: input.nama,
+        sandi_baru: input.kataSandi,
+        no_hp: input.noHp,
+      });
       await muat();
+      if (error) {
+        const pesan = pesanGalat(error.message);
+        tampilkanToast(pesan, "galat");
+        return { ok: false, pesan };
+      }
+      return { ok: true };
     },
     [token, muat, tampilkanToast],
+  );
+
+  /**
+   * Mengaktifkan / menonaktifkan akun warga. Wajib disertai kata sandi Ketua RT
+   * yang diperiksa ulang di server sebelum perubahan disimpan.
+   */
+  const ubahStatusWarga = useCallback(
+    async (
+      wargaId: string,
+      status: "aktif" | "nonaktif",
+      sandiKonfirmasi: string,
+    ): Promise<Hasil> => {
+      if (!sesi?.penggunaId) return { ok: false, pesan: "Sesi sudah berakhir. Silakan masuk ulang." };
+
+      // 1) Pastikan kata sandi yang diketik memang milik Ketua RT yang sedang masuk.
+      const cek = await supabase.rpc("login", {
+        nama_lengkap: penggunaAktif.nama,
+        kata_sandi: sandiKonfirmasi,
+      });
+      if (cek.error) return { ok: false, pesan: "Kata sandi Anda tidak cocok." };
+      const baris = (cek.data as { pengguna_id: string; role: string }[])?.[0];
+      if (!baris || baris.pengguna_id !== sesi.penggunaId || baris.role !== "ketua") {
+        return { ok: false, pesan: "Kata sandi Anda tidak cocok." };
+      }
+
+      // 2) Simpan perubahan status lewat fungsi database.
+      const { error } = await supabase.rpc("ubah_warga", {
+        token_sesi: sesi.token,
+        warga_id: wargaId,
+        nama_baru: null,
+        no_hp_baru: null,
+        status_baru: status,
+        sandi_baru: null,
+      });
+      await muat();
+      if (error) return { ok: false, pesan: pesanGalat(error.message) };
+      return { ok: true };
+    },
+    [sesi, penggunaAktif.nama, muat],
   );
 
   const tandaiDibaca = useCallback(
@@ -283,6 +339,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     batalkanPertukaran,
     validasiPertukaran,
     simpanWarga,
+    ubahStatusWarga,
     tandaiDibaca,
     tandaiSemuaDibaca,
     kirimPengingat,

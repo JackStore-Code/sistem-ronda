@@ -21,23 +21,30 @@ export function Dialog({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  // Fokus hanya dipindahkan SEKALI saat dialog dibuka. Sebelumnya efek ini
+  // bergantung pada onTutup yang berubah setiap render, sehingga setiap huruf
+  // yang diketik menarik kursor kembali ke kolom pertama (tidak bisa mengetik
+  // di kolom lain).
+  const onTutupRef = useRef(onTutup);
+  onTutupRef.current = onTutup;
+
   useEffect(() => {
     if (!buka) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onTutup();
+      if (e.key === "Escape") onTutupRef.current();
     };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusable = ref.current?.querySelector<HTMLElement>(
-      "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+      "input:not([type='hidden']), select, textarea, button, [href], [tabindex]:not([tabindex='-1'])",
     );
     focusable?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [buka, onTutup]);
+  }, [buka]);
 
   if (!buka) return null;
 
