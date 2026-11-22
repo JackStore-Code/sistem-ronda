@@ -6,6 +6,7 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { ToastHost } from "@/components/ui/Toast";
+import { cariAkun } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,14 +25,11 @@ export default function LoginPage() {
 
   function masuk(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const namaDicari = nama.trim().toLocaleLowerCase("id-ID");
-    const pengguna = state.pengguna.find((p) =>
-      p.statusAkun === "aktif" &&
-      (p.nama.toLocaleLowerCase("id-ID") === namaDicari || p.username.replace(/^@/, "").toLocaleLowerCase("id-ID") === namaDicari)
-    );
-    if (!pengguna || password !== "ronda123") {
-      setPesanGalat("Nama atau kata sandi demo tidak cocok.");
-      tampilkanToast("Nama atau kata sandi demo tidak cocok.", "galat");
+    const pengguna = cariAkun(state.pengguna, nama, password);
+    if (!pengguna) {
+      const pesan = "Nama lengkap atau kata sandi tidak cocok.";
+      setPesanGalat(pesan);
+      tampilkanToast(pesan, "galat");
       return;
     }
     pilihPengguna(pengguna.id);
@@ -48,14 +46,14 @@ export default function LoginPage() {
           </span>
           <div><p className="text-lg font-semibold text-ink">Ronda Warga</p><p className="text-sm text-muted">RT 05 / RW 03 Sukamaju</p></div>
         </div>
-        <h1 className="text-2xl font-semibold text-ink">Masuk ke akun demo</h1>
-        <p className="mt-1 text-sm text-muted">Gunakan nama warga atau username yang sudah tersedia.</p>
+        <h1 className="text-2xl font-semibold text-ink">Masuk ke akun</h1>
+        <p className="mt-1 text-sm text-muted">Tulis nama lengkap sesuai data warga, lalu kata sandi akun Anda.</p>
         <form onSubmit={masuk} className="mt-6 space-y-4" noValidate>
-          <Field id="nama-login" label="Nama atau username" wajib>
-            <Input id="nama-login" autoComplete="username" value={nama} onChange={(e) => { setNama(e.target.value); setPesanGalat(""); }} placeholder="Contoh: Budi Santoso atau budi.rt05" required />
+          <Field id="nama-login" label="Nama lengkap" wajib>
+            <Input id="nama-login" autoComplete="name" autoCapitalize="words" value={nama} onChange={(e) => { setNama(e.target.value); setPesanGalat(""); }} placeholder="Contoh: Aditya Pratama" required />
           </Field>
           <Field id="password-login" label="Kata sandi" wajib>
-            <Input id="password-login" type="password" autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setPesanGalat(""); }} placeholder="Kata sandi demo" required />
+            <Input id="password-login" type="password" autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setPesanGalat(""); }} placeholder="Kata sandi akun" required />
           </Field>
           {pesanGalat ? (
             <p role="alert" aria-live="assertive" className="rounded-lg border border-[#f2cfcc] bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
@@ -65,7 +63,7 @@ export default function LoginPage() {
           <Button type="submit" varian="utama" className="w-full">Masuk</Button>
         </form>
         <div className="mt-5 rounded-lg border border-line bg-[#fbfcfa] p-3 text-xs leading-5 text-muted">
-          Mode demo: sandi untuk semua akun aktif adalah <strong className="text-ink">ronda123</strong>. Akun Ketua RT dan akun warga terpisah — masuk dengan akun yang ingin dipakai.
+          Nama lengkap wajib ditulis utuh; huruf besar/kecil dan spasi ganda tidak berpengaruh. Akun Ketua RT dan akun warga terpisah.
         </div>
       </section>
     </main>

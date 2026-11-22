@@ -9,6 +9,8 @@ export type Pengguna = {
   noHp: string;
   role: Role;
   statusAkun: StatusAkun;
+  /** Kata sandi akun. Selalu huruf kecil; dipakai bersama nama lengkap saat masuk. */
+  kataSandi: string;
 };
 
 export type StatusPublikasi = "draft" | "dipublikasikan";

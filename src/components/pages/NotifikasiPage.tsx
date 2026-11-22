@@ -131,8 +131,8 @@ export function PengaturanPage() {
               <dd className="text-ink">{penggunaAktif.nama}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">Username</dt>
-              <dd className="text-ink">{penggunaAktif.username}</dd>
+              <dt className="text-muted">Nama lengkap (login)</dt>
+              <dd className="text-right text-ink">{penggunaAktif.nama}</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-muted">Nomor HP</dt>

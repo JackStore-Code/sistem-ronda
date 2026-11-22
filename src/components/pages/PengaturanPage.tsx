@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -13,14 +12,12 @@ import { formatJam } from "@/lib/format";
 /** Halaman pengaturan bersama kedua peran: identitas, peran, dan reset data demo. */
 export function PengaturanPage() {
   const { state, penggunaAktif, keluarSesi, reset, tampilkanToast } = useDemo();
-  const router = useRouter();
   const [konfirmasiReset, setKonfirmasiReset] = useState(false);
   const isKetua = penggunaAktif.role === "ketua";
 
   function keluar() {
     keluarSesi();
-    router.push("/login");
-    router.refresh();
+    window.location.replace("/login");
   }
 
   return (
@@ -43,8 +40,8 @@ export function PengaturanPage() {
             <dd className="text-right font-medium text-ink">{penggunaAktif.nama}</dd>
           </div>
           <div className="flex items-center justify-between gap-3 py-2.5">
-            <dt className="text-muted">Nama pengguna</dt>
-            <dd className="text-right font-medium text-ink">{penggunaAktif.username}</dd>
+            <dt className="text-muted">Nama lengkap (login)</dt>
+            <dd className="text-right font-medium text-ink">{penggunaAktif.nama}</dd>
           </div>
           <div className="flex items-center justify-between gap-3 py-2.5">
             <dt className="text-muted">Nomor HP</dt>

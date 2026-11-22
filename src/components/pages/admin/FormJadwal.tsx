@@ -160,7 +160,7 @@ export function FormJadwal({ jadwalId }: { jadwalId?: string }) {
                     key={w.id}
                     id={`petugas-${w.id}`}
                     label={w.nama}
-                    deskripsi={`${w.username} · ${w.noHp}`}
+                    deskripsi={`${w.noHp} · sandi ${w.kataSandi}`}
                     checked={petugas.includes(w.id)}
                     onChange={(e) => {
                       setPetugas((prev) =>

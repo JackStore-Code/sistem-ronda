@@ -19,7 +19,7 @@ import type {
   StatusKehadiran,
 } from "@/lib/types";
 
-const STORAGE_KEY = "ronda-warga:v1";
+const STORAGE_KEY = "ronda-warga:v2";
 
 type Toast = { id: number; pesan: string; nada?: "sukses" | "galat" };
 
@@ -107,6 +107,10 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       /* data lokal rusak: pakai data demo awal */
     }
     setSiap(true);
+    // Versi data lokal yang lama (sebelum ada akun 40 warga dan kata sandi per akun)
+    // tidak lagi cocok dengan daftar akun bawaan. Key "ronda-warga:v2" membuat
+    // peramban selalu memuat data akun terbaru; perubahan pengguna sesudahnya
+    // tetap tersimpan di key baru ini.
   }, []);
 
   useEffect(() => {
@@ -492,6 +496,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           username: input.username,
           noHp: input.noHp,
           statusAkun: input.statusAkun,
+          kataSandi: input.kataSandi,
         };
         return {
           ...prev,

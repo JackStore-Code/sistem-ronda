@@ -13,7 +13,7 @@ export function DataWargaKetua() {
   const { state, simpanWarga, tampilkanToast } = useDemo();
   const [cari, setCari] = useState("");
   const [status, setStatus] = useState<"semua" | "aktif" | "nonaktif">("semua");
-  const [form, setForm] = useState<null | { id?: string; nama: string; username: string; noHp: string; statusAkun: "aktif" | "nonaktif" }>(null);
+  const [form, setForm] = useState<null | { id?: string; nama: string; kataSandi: string; noHp: string; statusAkun: "aktif" | "nonaktif" }>(null);
   const [galat, setGalat] = useState<Record<string, string>>({});
 
   const daftar = useMemo(() => {
@@ -25,7 +25,6 @@ export function DataWargaKetua() {
         if (!q) return true;
         return (
           p.nama.toLowerCase().includes(q) ||
-          p.username.toLowerCase().includes(q) ||
           p.noHp.includes(q)
         );
       })
@@ -38,7 +37,7 @@ export function DataWargaKetua() {
     setForm({
       id: p?.id,
       nama: p?.nama ?? "",
-      username: p?.username ?? "@",
+      kataSandi: p?.kataSandi ?? "",
       noHp: p?.noHp ?? "",
       statusAkun: p?.statusAkun ?? "aktif",
     });
@@ -48,19 +47,27 @@ export function DataWargaKetua() {
   function kirim() {
     if (!form) return;
     const g: Record<string, string> = {};
-    if (form.nama.trim().length < 3) g.nama = "Nama lengkap wajib diisi (minimal 3 karakter).";
-    if (!/^@[\w.]{3,}$/.test(form.username.trim())) g.username = "Username diawali @, minimal 4 karakter tanpa spasi.";
+    if (form.nama.trim().split(/\s+/).filter(Boolean).length < 2)
+      g.nama = "Tulis nama lengkap (minimal nama depan dan belakang).";
+    if (form.kataSandi.trim().length < 6) g.kataSandi = "Kata sandi minimal 6 karakter.";
+    if (!/^[a-z0-9]+$/.test(form.kataSandi.trim()))
+      g.kataSandi = "Kata sandi hanya huruf kecil dan angka, tanpa spasi.";
     if (form.noHp.replace(/\D/g, "").length < 9) g.noHp = "Nomor HP tidak valid. Contoh: 0812-0000-0101.";
+    const rapikan = (v: string) => v.trim().replace(/\s+/g, " ").toLowerCase();
     const dup = state.pengguna.find(
-      (p) => p.username.toLowerCase() === form.username.trim().toLowerCase() && p.id !== form.id,
+      (p) => rapikan(p.nama) === rapikan(form.nama) && p.id !== form.id,
     );
-    if (dup) g.username = "Username sudah dipakai warga lain.";
+    if (dup) g.nama = "Nama lengkap ini sudah dipakai akun lain — nama dipakai untuk login.";
     setGalat(g);
     if (Object.keys(g).length > 0) return;
+    const sandi = form.kataSandi.trim().toLowerCase();
+    const namaBaru = form.nama.trim().replace(/\s+/g, " ");
     simpanWarga({
       id: form.id,
-      nama: form.nama.trim(),
-      username: form.username.trim(),
+      nama: namaBaru,
+      // Username hanya label internal; login memakai nama lengkap + kata sandi.
+      username: `@${namaBaru.split(" ")[0].toLowerCase()}`,
+      kataSandi: sandi,
       noHp: form.noHp.trim(),
       statusAkun: form.statusAkun,
     });
@@ -97,7 +104,7 @@ export function DataWargaKetua() {
             id="cari-warga"
             value={cari}
             onChange={(e) => setCari(e.target.value)}
-            placeholder="Cari nama, username, atau nomor HP"
+            placeholder="Cari nama atau nomor HP"
             aria-label="Cari warga"
             className="flex-1"
           />
@@ -130,7 +137,7 @@ export function DataWargaKetua() {
                 <thead>
                   <tr className="border-b border-line bg-[#fbfcfa] text-[11.5px] uppercase tracking-[0.04em] text-muted">
                     <th scope="col" className="px-4 py-2.5 font-semibold">Nama</th>
-                    <th scope="col" className="px-4 py-2.5 font-semibold">Username</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Kata sandi</th>
                     <th scope="col" className="px-4 py-2.5 font-semibold">Nomor HP</th>
                     <th scope="col" className="px-4 py-2.5 font-semibold">Status akun</th>
                     <th scope="col" className="px-4 py-2.5 text-right font-semibold">Tindakan</th>
@@ -147,7 +154,7 @@ export function DataWargaKetua() {
                           <span className="text-[13.5px] font-medium text-ink">{w.nama}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#41504a]">{w.username}</td>
+                      <td className="px-4 py-3 font-mono text-[13px] text-[#41504a]">{w.kataSandi}</td>
                       <td className="px-4 py-3 text-[13px] text-[#41504a]">{w.noHp}</td>
                       <td className="px-4 py-3">
                         {w.statusAkun === "aktif" ? (
@@ -176,7 +183,7 @@ export function DataWargaKetua() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13.5px] font-medium text-ink">{w.nama}</p>
                     <p className="text-[12px] text-muted">
-                      {w.username} · {w.noHp}
+                      Sandi <span className="font-mono">{w.kataSandi}</span> · {w.noHp}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
@@ -210,7 +217,7 @@ export function DataWargaKetua() {
       >
         {form ? (
           <div className="space-y-3">
-            <Field id="nama-warga" label="Nama lengkap" wajib galat={galat.nama}>
+            <Field id="nama-warga" label="Nama lengkap (dipakai login)" wajib galat={galat.nama}>
               <Input
                 id="nama-warga"
                 value={form.nama}
@@ -220,13 +227,13 @@ export function DataWargaKetua() {
               />
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field id="username-warga" label="Username" wajib galat={galat.username} petunjuk="dipakai untuk login">
+              <Field id="sandi-warga" label="Kata sandi" wajib galat={galat.kataSandi} petunjuk="huruf kecil & angka, dipakai bersama nama lengkap">
                 <Input
-                  id="username-warga"
-                  value={form.username}
-                  galat={galat.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  placeholder="@ahmad.f"
+                  id="sandi-warga"
+                  value={form.kataSandi}
+                  galat={galat.kataSandi}
+                  onChange={(e) => setForm({ ...form, kataSandi: e.target.value })}
+                  placeholder="aditya142"
                 />
               </Field>
               <Field id="hp-warga" label="Nomor HP" wajib galat={galat.noHp} petunjuk="untuk notifikasi">

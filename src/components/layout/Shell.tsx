@@ -91,13 +91,6 @@ function KerangkaMemuat() {
   );
 }
 
-function logout(router: ReturnType<typeof useRouter>, setKonfirmasiLogout: (v: boolean) => void, setMenuProfil: (v: boolean) => void) {
-  setKonfirmasiLogout(false);
-  setMenuProfil(false);
-  router.push("/login");
-  router.refresh();
-}
-
 
 function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketua" | "warga" }) {
   const { penggunaAktif, state, siap, keluarSesi } = useDemo();
@@ -141,7 +134,11 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
 
   function keluar() {
     keluarSesi();
-    logout(router, setKonfirmasiLogout, setMenuProfil);
+    setKonfirmasiLogout(false);
+    setMenuProfil(false);
+    // Sesi dikosongkan lebih dulu, baru halaman login dimuat ulang supaya penjaga
+    // rute tidak sempat memantulkan pengguna kembali ke area peran.
+    window.location.replace("/login");
   }
 
   function aktif(href: string) {
@@ -246,7 +243,7 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
       <Dialog
         buka={konfirmasiLogout}
         onTutup={() => setKonfirmasiLogout(false)}
-        judul="Keluar dari sesi demo?"
+        judul="Keluar dari akun?"
         deskripsi={`Kamu akan keluar sebagai ${penggunaAktif.nama}. Tidak ada akun atau data ronda yang dihapus.`}
         aksi={
           <>
