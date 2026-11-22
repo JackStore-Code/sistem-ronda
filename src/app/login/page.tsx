@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { Button } from "@/components/ui/Button";
@@ -9,10 +9,18 @@ import { ToastHost } from "@/components/ui/Toast";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { state, pilihPengguna, tampilkanToast } = useDemo();
+  const { state, siap, pilihPengguna, tampilkanToast } = useDemo();
   const [nama, setNama] = useState("");
   const [password, setPassword] = useState("");
   const [pesanGalat, setPesanGalat] = useState("");
+
+  // Sudah masuk: langsung ke area sesuai peran akun (tidak bisa lompat peran).
+  const sesiAktif = state.pengguna.find((p) => p.id === state.sesi.penggunaId && p.statusAkun === "aktif");
+  useEffect(() => {
+    if (siap && sesiAktif) {
+      router.replace(sesiAktif.role === "ketua" ? "/admin/ringkasan" : "/warga/ringkasan");
+    }
+  }, [siap, sesiAktif, router]);
 
   function masuk(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -57,7 +65,7 @@ export default function LoginPage() {
           <Button type="submit" varian="utama" className="w-full">Masuk</Button>
         </form>
         <div className="mt-5 rounded-lg border border-line bg-[#fbfcfa] p-3 text-xs leading-5 text-muted">
-          Mode demo: sandi untuk semua akun aktif adalah <strong className="text-ink">ronda123</strong>. Tidak ada akun baru dibuat.
+          Mode demo: sandi untuk semua akun aktif adalah <strong className="text-ink">ronda123</strong>. Akun Ketua RT dan akun warga terpisah — masuk dengan akun yang ingin dipakai.
         </div>
       </section>
     </main>

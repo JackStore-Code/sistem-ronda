@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDemo } from "@/components/providers/DemoProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -11,10 +12,16 @@ import { formatJam } from "@/lib/format";
 
 /** Halaman pengaturan bersama kedua peran: identitas, peran, dan reset data demo. */
 export function PengaturanPage() {
-  const { state, penggunaAktif, gantiPeran, pilihPengguna, reset, tampilkanToast } = useDemo();
+  const { state, penggunaAktif, keluarSesi, reset, tampilkanToast } = useDemo();
+  const router = useRouter();
   const [konfirmasiReset, setKonfirmasiReset] = useState(false);
   const isKetua = penggunaAktif.role === "ketua";
-  const daftarWarga = state.pengguna.filter((p) => p.role === "warga" && p.statusAkun === "aktif");
+
+  function keluar() {
+    keluarSesi();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <div className="space-y-4">
@@ -22,7 +29,7 @@ export function PengaturanPage() {
         <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted">Pengaturan</p>
         <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Akun &amp; data demo</h1>
         <p className="mt-1 text-[13px] text-muted">
-          Atur peran pratinjau dan kelola data yang tersimpan di peramban ini.
+          Kelola identitas akun yang sedang masuk dan data yang tersimpan di peramban ini.
         </p>
       </div>
 
@@ -54,42 +61,12 @@ export function PengaturanPage() {
 
       <Card>
         <CardHeader
-          judul="Pratinjau peran"
-          keterangan="Beralih peran untuk memeriksa tampilan Ketua RT dan warga. Tidak ada kata sandi pada mode demo."
+          judul="Sesi"
+          keterangan="Akun Ketua RT dan akun warga terpisah. Untuk memakai akun lain, keluar lalu masuk lewat halaman login."
         />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button varian={isKetua ? "utama" : "sekunder"} onClick={() => gantiPeran("ketua")}>
-            Masuk sebagai Ketua RT
-          </Button>
-          <Button varian={isKetua ? "sekunder" : "utama"} onClick={() => gantiPeran("warga")}>
-            Masuk sebagai warga
-          </Button>
-        </div>
-
-        <div className="mt-4 border-t border-line pt-3">
-          <label htmlFor="pilih-warga" className="mb-1.5 block text-[13px] font-medium text-ink">
-            Warga yang sedang dipakai
-          </label>
-          <select
-            id="pilih-warga"
-            value={penggunaAktif.id}
-            onChange={(e) => pilihPengguna(e.target.value)}
-            className="h-10 w-full max-w-sm rounded-lg border border-line bg-surface px-3 text-[14px] text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
-          >
-            <option value={state.pengguna.find((p) => p.role === "ketua")?.id ?? ""}>
-              {state.pengguna.find((p) => p.role === "ketua")?.nama ?? "Ketua RT"} (Ketua RT)
-            </option>
-            {daftarWarga.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.nama} (@{w.username})
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-[12px] leading-4 text-muted">
-            Berguna untuk memperagakan alur dua sisi: ajukan pertukaran sebagai satu warga, lalu tanggapi sebagai warga
-            tujuan.
-          </p>
-        </div>
+        <Button varian="sekunder" className="mt-3" onClick={keluar}>
+          Keluar dari akun ini
+        </Button>
       </Card>
 
       <Card>

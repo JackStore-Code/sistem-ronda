@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { useDemo } from "../providers/DemoProvider";
@@ -100,7 +100,7 @@ function logout(router: ReturnType<typeof useRouter>, setKonfirmasiLogout: (v: b
 
 
 function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketua" | "warga" }) {
-  const { penggunaAktif, state, gantiPeran, siap } = useDemo();
+  const { penggunaAktif, state, siap, keluarSesi } = useDemo();
   const pathname = usePathname();
   const router = useRouter();
   const [menuProfil, setMenuProfil] = useState(false);
@@ -110,6 +110,15 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
   // Area aktif mengikuti layout rute, bukan peran sesi: Ketua RT pun bisa
   // membuka area warga untuk memeriksa tampilan tanpa keluar dari rute.
   const awalan = peran === "ketua" ? "/admin" : "/warga";
+
+  // Akun Ketua RT dan warga terpisah: tidak ada perpindahan peran di dalam
+  // aplikasi. Sesi yang tidak cocok dengan area (atau belum login) dikirim ke
+  // halaman login begitu data tersimpan selesai dimuat.
+  const sesiCocok = state.sesi.penggunaId === penggunaAktif.id && penggunaAktif.role === peran;
+  useEffect(() => {
+    if (!siap) return;
+    if (!state.sesi.penggunaId || !sesiCocok) router.replace("/login");
+  }, [siap, sesiCocok, state.sesi.penggunaId, router]);
 
   const menu: Item[] = [
     { href: `${awalan}/ringkasan`, label: "Ringkasan", ikon: <Ikon name="ringkasan" /> },
@@ -130,17 +139,10 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
     (n) => !n.dibaca && (!n.penerimaId || n.penerimaId === penerima || penggunaAktif.role === "ketua"),
   ).length;
 
-  function ganti(role: "ketua" | "warga") {
-    gantiPeran(role);
-    setMenuProfil(false);
-    router.push(role === "ketua" ? "/admin/ringkasan" : "/warga/ringkasan");
-  }
-
   function keluar() {
+    keluarSesi();
     logout(router, setKonfirmasiLogout, setMenuProfil);
   }
-
-  const wargaPertama = state.pengguna.find((p) => p.role === "warga")?.nama.split(" ")[0] ?? "warga";
 
   function aktif(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -219,37 +221,17 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
               </p>
             </div>
           </div>
-          <div className="mt-2 rounded-lg border border-line bg-[#fbfcfa] p-2">
-            <p className="mb-1.5 px-1 text-[11px] font-medium uppercase tracking-wide text-muted">Pratinjau peran</p>
-            <div className="flex gap-1">
-              {(["ketua", "warga"] as const).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => ganti(r)}
-                  className={`flex-1 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors ${
-                    (r === "ketua") === isKetua
-                      ? "bg-brand text-white"
-                      : "bg-surface text-[#41504a] border border-line hover:bg-neutral-soft"
-                  }`}
-                >
-                  {r === "ketua" ? "Ketua RT" : "Warga"}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
           isKetua={isKetua}
-          wargaPertama={wargaPertama}
           belumDibaca={belumDibaca}
           inisial={inisial}
           penggunaAktif={penggunaAktif}
           menuProfil={menuProfil}
           setMenuProfil={setMenuProfil}
-          ganti={ganti}
           awalan={awalan}
           onLogout={() => setKonfirmasiLogout(true)}
         />
@@ -279,24 +261,20 @@ function Cangkang({ children, peran }: { children: React.ReactNode; peran: "ketu
 
 function Header({
   isKetua,
-  wargaPertama,
   belumDibaca,
   inisial,
   penggunaAktif,
   menuProfil,
   setMenuProfil,
-  ganti,
   awalan,
   onLogout,
 }: {
   isKetua: boolean;
-  wargaPertama: string;
   belumDibaca: number;
   inisial: string;
   penggunaAktif: { nama: string; role: string; noHp: string };
   menuProfil: boolean;
   setMenuProfil: (v: boolean) => void;
-  ganti: (r: "ketua" | "warga") => void;
   awalan: string;
   onLogout: () => void;
 }) {
@@ -375,13 +353,6 @@ function Header({
                     >
                       Pengaturan akun
                     </Link>
-                    <button
-                      role="menuitem"
-                      onClick={() => ganti(isKetua ? "warga" : "ketua")}
-                      className="flex min-h-9 w-full items-center rounded-md px-2.5 text-[13px] text-ink hover:bg-neutral-soft"
-                    >
-                      Masuk sebagai {isKetua ? `warga (${wargaPertama})` : "Ketua RT"}
-                    </button>
                     <button
                       role="menuitem"
                       onClick={onLogout}

@@ -111,7 +111,7 @@ export function NotifikasiPage() {
 }
 
 export function PengaturanPage() {
-  const { penggunaAktif, gantiPeran, reset, tampilkanToast, state } = useDemo();
+  const { penggunaAktif, reset, tampilkanToast, state } = useDemo();
   const router = useRouter();
   const isKetua = penggunaAktif.role === "ketua";
 
@@ -143,16 +143,6 @@ export function PengaturanPage() {
               <dd className="text-ink">{isKetua ? "Ketua RT" : "Warga"}</dd>
             </div>
           </dl>
-          <Button
-            className="mt-4"
-            varian="sekunder"
-            onClick={() => {
-              gantiPeran(isKetua ? "warga" : "ketua");
-              router.push(isKetua ? "/warga/ringkasan" : "/admin/ringkasan");
-            }}
-          >
-            Masuk sebagai {isKetua ? "warga (Andi)" : "Ketua RT"}
-          </Button>
         </Card>
 
         <Card>

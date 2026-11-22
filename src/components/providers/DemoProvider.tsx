@@ -45,9 +45,9 @@ type DemoContextValue = {
   siap: boolean;
   penggunaAktif: Pengguna;
   wargaAktif: Pengguna[];
-  // navigasi sesi
-  gantiPeran: (role: "ketua" | "warga") => void;
+  // sesi (hanya diisi lewat halaman login)
   pilihPengguna: (penggunaId: string) => void;
+  keluarSesi: () => void;
   // jadwal
   simpanJadwal: (input: BuatJadwalInput) => { ok: boolean; id?: string; pesan?: string };
   publikasikanJadwal: (jadwalId: string) => void;
@@ -84,7 +84,13 @@ function isoTanggalSekarang(): string {
 }
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<State>(() => buildInitialState());
+  // Saat render pertama, sesi harus dianggap belum login. Data localStorage baru
+  // dibaca di effect; tanpa ini halaman sempat dirender sebagai Ketua RT
+  // sehingga penjaga rute tidak bisa membedakan "belum login" dari "login".
+  const [state, setState] = useState<State>(() => ({
+    ...buildInitialState(),
+    sesi: { penggunaId: "" },
+  }));
   const [siap, setSiap] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -134,22 +140,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [state.pengguna],
   );
 
-  const gantiPeran = useCallback((role: "ketua" | "warga") => {
-    setState((prev) => {
-      const target =
-        role === "ketua"
-          ? prev.pengguna.find((p) => p.role === "ketua")
-          : prev.pengguna.find((p) => p.id === "andi") ?? prev.pengguna.find((p) => p.role === "warga");
-      return target ? { ...prev, sesi: { ...prev.sesi, penggunaId: target.id } } : prev;
-    });
-  }, []);
-
-  // Demo memakai satu Ketua RT dan beberapa warga; saklar warga mana yang sedang
-  // dipakai perlu ada agar alur "warga tujuan menanggapi" bisa diperagakan.
+  // Sesi hanya bisa diisi lewat halaman login. Tidak ada saklar peran atau
+  // pemilih warga, sehingga akun Ketua RT dan warga benar-benar terpisah.
   const pilihPengguna = useCallback((penggunaId: string) => {
     setState((prev) =>
       prev.pengguna.some((p) => p.id === penggunaId) ? { ...prev, sesi: { ...prev.sesi, penggunaId } } : prev,
     );
+  }, []);
+
+  const keluarSesi = useCallback(() => {
+    setState((prev) => ({ ...prev, sesi: { penggunaId: "" } }));
   }, []);
 
   const tambahAktivitas = (prev: State, teks: string): State["aktivitas"] => [
@@ -553,8 +553,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     siap,
     penggunaAktif,
     wargaAktif,
-    gantiPeran,
     pilihPengguna,
+    keluarSesi,
     simpanJadwal,
     publikasikanJadwal,
     hapusJadwal,
