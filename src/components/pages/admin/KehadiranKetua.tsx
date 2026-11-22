@@ -33,6 +33,42 @@ export function KehadiranKetua() {
   );
   const rekap = countStatusKehadiran(semuaDetail.map((detail) => ({ detail })));
 
+  // FR-18: rekap per warga untuk periode yang dipilih. Urut dari yang paling
+  // sering tidak hadir, supaya Ketua RT langsung melihat yang perlu ditindak.
+  const rekapPerWarga = useMemo(() => {
+    const peta = new Map<string, { hadir: number; tidakHadir: number; belum: number; total: number }>();
+    for (const d of semuaDetail) {
+      const baris = peta.get(d.wargaId) ?? { hadir: 0, tidakHadir: 0, belum: 0, total: 0 };
+      baris.total += 1;
+      if (d.statusKehadiran === "hadir") baris.hadir += 1;
+      else if (d.statusKehadiran === "tidak-hadir") baris.tidakHadir += 1;
+      else baris.belum += 1;
+      peta.set(d.wargaId, baris);
+    }
+    return [...peta.entries()]
+      .map(([wargaId, angka]) => {
+        const warga = state.pengguna.find((p) => p.id === wargaId);
+        const tercatat = angka.hadir + angka.tidakHadir;
+        return {
+          wargaId,
+          nama: warga?.nama ?? "Akun terhapus",
+          noHp: warga?.noHp ?? "",
+          ...angka,
+          persenHadir: tercatat === 0 ? null : Math.round((angka.hadir / tercatat) * 100),
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.tidakHadir - a.tidakHadir ||
+          (a.persenHadir ?? 101) - (b.persenHadir ?? 101) ||
+          a.nama.localeCompare(b.nama),
+      );
+  }, [semuaDetail, state.pengguna]);
+
+  const tanpaDataWarga = state.pengguna.filter(
+    (p) => p.role === "warga" && p.statusAkun === "aktif" && !rekapPerWarga.some((r) => r.wargaId === p.id),
+  ).length;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -85,6 +121,88 @@ export function KehadiranKetua() {
         <KotakRekap label="Tidak hadir" nilai={rekap["tidak-hadir"]} nada="danger" />
         <KotakRekap label="Belum dicatat" nilai={rekap["belum-dicatat"]} nada="attention" />
       </div>
+
+      <Card padding={false}>
+        <div className="border-b border-line p-5 pb-3">
+          <CardHeader
+            judul="Rekap kehadiran per warga"
+            keterangan="Dihitung dari jadwal pada periode yang dipilih. Persentase memakai tugas yang sudah dicatat (hadir + tidak hadir)."
+          />
+        </div>
+        {rekapPerWarga.length === 0 ? (
+          <div className="p-4">
+            <EmptyState
+              ikon="calendar"
+              judul="Belum ada data kehadiran pada periode ini"
+              deskripsi="Pilih periode lain, atau publikasikan jadwal baru agar petugas tercatat."
+            />
+          </div>
+        ) : (
+          <>
+            <div className="hidden lg:block">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-line bg-[#fbfcfa] text-[11.5px] uppercase tracking-[0.04em] text-muted">
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Warga</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Tugas</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Hadir</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Tidak hadir</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Belum dicatat</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Persentase hadir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rekapPerWarga.map((r) => (
+                    <tr key={r.wargaId} className="border-b border-line last:border-0 hover:bg-[#fbfcfa]">
+                      <td className="px-4 py-2.5">
+                        <p className="text-[13px] font-medium text-ink">{r.nama}</p>
+                        <p className="text-[11.5px] text-muted">{r.noHp}</p>
+                      </td>
+                      <td className="px-4 py-2.5 text-[13px] text-[#41504a]">{r.total}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-medium text-brand">{r.hadir}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-medium text-danger">{r.tidakHadir}</td>
+                      <td className="px-4 py-2.5 text-[13px] text-attention">{r.belum}</td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-neutral-soft">
+                            <div
+                              className="h-full rounded-full bg-brand"
+                              style={{ width: `${r.persenHadir ?? 0}%` }}
+                            />
+                          </div>
+                          <span className="text-[12.5px] text-[#41504a]">
+                            {r.persenHadir === null ? "belum ada" : `${r.persenHadir}%`}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <ul className="divide-y divide-line lg:hidden">
+              {rekapPerWarga.map((r) => (
+                <li key={r.wargaId} className="p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-[13.5px] font-medium text-ink">{r.nama}</p>
+                    <span className="shrink-0 text-[12.5px] text-[#41504a]">
+                      {r.persenHadir === null ? "belum ada" : `${r.persenHadir}% hadir`}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[12px] text-muted">
+                    {r.total} tugas · {r.hadir} hadir · {r.tidakHadir} tidak hadir · {r.belum} belum dicatat
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {tanpaDataWarga > 0 ? (
+          <p className="border-t border-line px-4 py-2.5 text-[12px] text-muted">
+            {tanpaDataWarga} warga aktif tidak punya giliran pada periode ini, jadi belum muncul di rekap.
+          </p>
+        ) : null}
+      </Card>
 
       <Card padding={false}>
         <div className="border-b border-line p-5 pb-3">

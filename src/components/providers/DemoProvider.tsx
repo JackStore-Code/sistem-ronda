@@ -192,6 +192,12 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
       const id = input.id ?? `j-${Date.now()}`;
       setState((prev) => {
+        const jadwalLama = input.id ? prev.jadwal.find((j) => j.id === input.id) : undefined;
+        const petugasLama = input.id
+          ? prev.detailJadwal
+              .filter((d) => d.jadwalId === input.id)
+              .map((d) => d.wargaId)
+          : [];
         const status = input.publikasikan ? "dipublikasikan" : "draft";
         const baru: JadwalRonda = {
           id,
@@ -215,7 +221,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         const tanggalTeks = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long" }).format(
           new Date(`${input.tanggal}T00:00:00`),
         );
-        return {
+        let next: State = {
           ...prev,
           jadwal,
           detailJadwal: [...detailLain, ...detailBaru],
@@ -226,6 +232,44 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
               : `Jadwal ${tanggalTeks} dibuat untuk ${input.petugasIds.length} petugas.`,
           ),
         };
+
+        // FR-08: jadwal yang sudah dipublikasikan lalu diubah menyentuh dua pihak —
+        // petugas yang diganti dan petugas yang baru masuk. Keduanya diberi tahu.
+        // Jadwal yang masih draft tidak pernah terlihat warga, jadi tidak perlu kabar.
+        const sudahTayang =
+          Boolean(jadwalLama) && (jadwalLama?.status === "dipublikasikan" || status === "dipublikasikan");
+        if (input.id && sudahTayang) {
+          const diganti = petugasLama.filter((wargaId) => !input.petugasIds.includes(wargaId));
+          const ditambah = input.petugasIds.filter((wargaId) => !petugasLama.includes(wargaId));
+          for (const wargaId of diganti) {
+            const namaPengganti = prev.pengguna.find((u) => u.id === input.petugasIds[0])?.nama;
+            next = {
+              ...next,
+              notifikasi: tambahNotifikasi(next, {
+                judul: `Jadwal ronda ${tanggalTeks} berubah`,
+                pesan: namaPengganti
+                  ? `Anda tidak lagi bertugas pada jadwal ini. Petugas yang tercatat sekarang antara lain ${namaPengganti}.`
+                  : "Anda tidak lagi bertugas pada jadwal ini.",
+                kategori: "perubahan-jadwal",
+                penerimaId: wargaId,
+                tautan: `jadwal/${id}`,
+              }),
+            };
+          }
+          for (const wargaId of ditambah) {
+            next = {
+              ...next,
+              notifikasi: tambahNotifikasi(next, {
+                judul: `Anda mendapat giliran ronda ${tanggalTeks}`,
+                pesan: `Jadwal ronda Anda baru ditambahkan: pukul ${input.waktuMulai} WIB.`,
+                kategori: "perubahan-jadwal",
+                penerimaId: wargaId,
+                tautan: `jadwal/${id}`,
+              }),
+            };
+          }
+        }
+        return next;
       });
       return { ok: true, id };
     },
@@ -275,18 +319,25 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const catatKehadiran = useCallback((detailId: string, status: StatusKehadiran) => {
-    setState((prev) => ({
-      ...prev,
-      detailJadwal: prev.detailJadwal.map((d) =>
-        d.id === detailId
-          ? {
-              ...d,
-              statusKehadiran: status,
-              waktuDicatat: status === "belum-dicatat" ? undefined : jamSekarang(),
-            }
-          : d,
-      ),
-    }));
+    setState((prev) => {
+      const detail = prev.detailJadwal.find((d) => d.id === detailId);
+      if (!detail) return prev;
+      const nama = prev.pengguna.find((p) => p.id === detail.wargaId)?.nama ?? "Warga";
+      const label = status === "hadir" ? "hadir" : status === "tidak-hadir" ? "tidak hadir" : "belum dicatat";
+      return {
+        ...prev,
+        detailJadwal: prev.detailJadwal.map((d) =>
+          d.id === detailId
+            ? {
+                ...d,
+                statusKehadiran: status,
+                waktuDicatat: status === "belum-dicatat" ? undefined : jamSekarang(),
+              }
+            : d,
+        ),
+        aktivitas: tambahAktivitas(prev, `Kehadiran ${nama} dicatat: ${label}.`),
+      };
+    });
   }, []);
 
   const ajukanPertukaran = useCallback(
