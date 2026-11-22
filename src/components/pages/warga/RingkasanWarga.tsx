@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/Badge";
 import { StatusKehadiranBadge, StatusPertukaranBadge } from "@/components/ui/Badges";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import {
   TODAY,
   countStatusKehadiran,
@@ -66,7 +65,6 @@ export function RingkasanWarga() {
         </ButtonLink>
       </div>
 
-      <DemoNotice />
 
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-4">

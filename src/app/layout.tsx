@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Ronda Warga · RT 05 / RW 03 Sukamaju",
   description:
-    "Sistem Informasi Manajemen Ronda Malam Berbasis Mobile untuk lingkungan RT. Data demo.",
+    "Sistem Informasi Manajemen Ronda Malam Berbasis Mobile untuk lingkungan RT.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -6,7 +6,6 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { KategoriBadge } from "@/components/ui/Badges";
 import { Button } from "@/components/ui/Button";
 import { Card, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { formatWaktuLengkap } from "@/lib/format";
 import type { Notifikasi } from "@/lib/types";
 
@@ -57,7 +56,6 @@ export function NotifikasiPage() {
         ) : null}
       </div>
 
-      <DemoNotice ringkas />
 
       {milikSaya.length === 0 ? (
         <EmptyState
@@ -104,7 +102,7 @@ export function NotifikasiPage() {
       )}
 
       <p className="px-1 text-[12px] leading-4 text-muted">
-        Pada mode demo, notifikasi hanya tampil di aplikasi. Pengiriman WhatsApp atau SMS belum aktif.
+        Notifikasi tampil di dalam aplikasi. Pengiriman WhatsApp atau SMS belum aktif.
       </p>
     </div>
   );
@@ -119,7 +117,7 @@ export function PengaturanPage() {
     <div className="space-y-4">
       <div>
         <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted">Pengaturan</p>
-        <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Pengaturan akun & demo</h1>
+        <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Pengaturan akun</h1>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
@@ -146,10 +144,9 @@ export function PengaturanPage() {
         </Card>
 
         <Card>
-          <h2 className="text-[15px] font-semibold text-ink">Data demo</h2>
+          <h2 className="text-[15px] font-semibold text-ink">Ringkasan data</h2>
           <p className="mt-1 text-[13px] leading-5 text-muted">
-            Aplikasi ini berjalan tanpa database. Semua perubahan disimpan di peramban ini; mengembalikan data demo
-            akan menghapus perubahan Anda.
+            Kembalikan data ke kondisi awal akan menghapus perubahan yang sudah Anda buat.
           </p>
           <div className="mt-3 rounded-lg border border-line bg-[#fbfcfa] px-3.5 py-3 text-[12.5px] text-muted">
             {state.pengguna.length} pengguna · {state.jadwal.length} jadwal · {state.pertukaran.length} pertukaran ·{" "}
@@ -160,10 +157,10 @@ export function PengaturanPage() {
             varian="bahaya"
             onClick={() => {
               reset();
-              tampilkanToast("Data demo dikembalikan ke kondisi awal.");
+              tampilkanToast("Data dikembalikan ke kondisi awal.");
             }}
           >
-            Kembalikan data demo
+            Kembalikan data awal
           </Button>
         </Card>
       </div>

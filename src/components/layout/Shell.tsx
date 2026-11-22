@@ -359,7 +359,7 @@ function Header({
                     </button>
                   </div>
                   <p className="border-t border-line px-3.5 py-2 text-[11px] leading-4 text-muted">
-                    Mode demo · data disimpan di peramban Anda
+                    Sesi akun aktif
                   </p>
                 </div>
               </>
@@ -425,7 +425,7 @@ function Memuat() {
       <div className="h-6 w-48 animate-pulse rounded bg-neutral-soft" />
       <div className="h-28 animate-pulse rounded-xl bg-neutral-soft" />
       <div className="h-40 animate-pulse rounded-xl bg-neutral-soft" />
-      <span className="sr-only">Memuat data demo…</span>
+      <span className="sr-only">Memuat data…</span>
     </div>
   );
 }

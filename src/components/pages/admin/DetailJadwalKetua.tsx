@@ -28,7 +28,7 @@ export function DetailJadwalKetua({ jadwalId }: { jadwalId: string }) {
       <div className="space-y-4">
         <Link href="/admin/jadwal" className="text-[12.5px] text-muted hover:text-ink">← Jadwal Ronda</Link>
         <h1 className="text-[22px] font-semibold text-ink">Jadwal tidak ditemukan</h1>
-        <p className="text-[13px] text-muted">Jadwal dengan ID {jadwalId} tidak ada pada data demo.</p>
+        <p className="text-[13px] text-muted">Jadwal dengan ID {jadwalId} tidak ditemukan.</p>
         <ButtonLink href="/admin/jadwal" varian="utama">Kembali ke daftar jadwal</ButtonLink>
       </div>
     );

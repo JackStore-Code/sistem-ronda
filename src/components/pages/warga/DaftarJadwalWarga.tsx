@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/Badge";
 import { StatusKehadiranBadge } from "@/components/ui/Badges";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Input, Select } from "@/components/ui/Field";
 import { TODAY, formatJam, formatTanggalPendek, petugasForSchedule } from "@/lib/format";
 
@@ -45,7 +44,6 @@ export function DaftarJadwalWarga() {
         <ButtonLink href="/warga/pertukaran/baru" varian="sekunder">Ajukan Pertukaran</ButtonLink>
       </div>
 
-      <DemoNotice ringkas />
 
       <Card padding={false}>
         <div className="flex flex-col gap-2.5 border-b border-line p-4 sm:flex-row">

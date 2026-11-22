@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/Badge";
 import { StatusPublikasiBadge } from "@/components/ui/Badges";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Dialog } from "@/components/ui/Dialog";
 import { Input, Select } from "@/components/ui/Field";
 import {
@@ -69,7 +68,6 @@ export function DaftarJadwalKetua() {
         </ButtonLink>
       </div>
 
-      <DemoNotice ringkas />
 
       <Card padding={false}>
         <div className="flex flex-col gap-2.5 border-b border-line p-4 lg:flex-row lg:items-center">
@@ -301,7 +299,7 @@ export function DaftarJadwalKetua() {
         buka={hapusId !== null}
         onTutup={() => setHapusId(null)}
         judul="Hapus jadwal ronda?"
-        deskripsi="Jadwal dan catatan kehadirannya akan dihapus dari data demo. Tindakan ini tidak dapat dibatalkan."
+        deskripsi="Jadwal dan catatan kehadirannya akan dihapus. Tindakan ini tidak dapat dibatalkan."
         aksi={
           <>
             <Button onClick={() => setHapusId(null)}>Batal</Button>
@@ -310,7 +308,7 @@ export function DaftarJadwalKetua() {
               onClick={() => {
                 if (hapusId) {
                   hapusJadwal(hapusId);
-                  tampilkanToast("Jadwal dihapus dari data demo.");
+                  tampilkanToast("Jadwal dihapus.");
                 }
                 setHapusId(null);
               }}

@@ -5,7 +5,6 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { StatusPertukaranBadge } from "@/components/ui/Badges";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Select } from "@/components/ui/Field";
 import { formatTanggalPendek, namaWarga } from "@/lib/format";
 import type { StatusTanggapan } from "@/lib/types";
@@ -51,7 +50,6 @@ export function DaftarPertukaranKetua() {
         </Select>
       </div>
 
-      <DemoNotice ringkas />
 
       <Card className="bg-[#fbfcfa]" padding={false}>
         <div className="flex flex-wrap items-center gap-2 px-4 py-3 text-[12px] text-muted">

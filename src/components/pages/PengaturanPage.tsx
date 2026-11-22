@@ -5,11 +5,10 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Dialog } from "@/components/ui/Dialog";
 import { formatJam } from "@/lib/format";
 
-/** Halaman pengaturan bersama kedua peran: identitas, peran, dan reset data demo. */
+/** Halaman pengaturan bersama kedua peran: identitas, sesi, ringkasan data, dan reset. */
 export function PengaturanPage() {
   const { state, penggunaAktif, keluarSesi, reset, tampilkanToast } = useDemo();
   const [konfirmasiReset, setKonfirmasiReset] = useState(false);
@@ -24,23 +23,18 @@ export function PengaturanPage() {
     <div className="space-y-4">
       <div>
         <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted">Pengaturan</p>
-        <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Akun &amp; data demo</h1>
+        <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Akun &amp; data</h1>
         <p className="mt-1 text-[13px] text-muted">
-          Kelola identitas akun yang sedang masuk dan data yang tersimpan di peramban ini.
+          Kelola identitas akun yang sedang masuk dan data yang tersimpan.
         </p>
       </div>
 
-      <DemoNotice />
 
       <Card>
-        <CardHeader judul="Identitas" keterangan="Data contoh — bukan data warga sungguhan." />
+        <CardHeader judul="Identitas" />
         <dl className="mt-3 divide-y divide-line text-[13px]">
           <div className="flex items-center justify-between gap-3 py-2.5">
             <dt className="text-muted">Nama</dt>
-            <dd className="text-right font-medium text-ink">{penggunaAktif.nama}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-3 py-2.5">
-            <dt className="text-muted">Nama lengkap (login)</dt>
             <dd className="text-right font-medium text-ink">{penggunaAktif.nama}</dd>
           </div>
           <div className="flex items-center justify-between gap-3 py-2.5">
@@ -67,7 +61,7 @@ export function PengaturanPage() {
       </Card>
 
       <Card>
-        <CardHeader judul="Data demo" keterangan="Ringkasan isi data yang tersimpan di peramban Anda." />
+        <CardHeader judul="Ringkasan data" keterangan="Jumlah data yang tersimpan saat ini." />
         <ul className="mt-3 grid grid-cols-2 gap-2 text-[12.5px] sm:grid-cols-4">
           {[
             ["Jadwal", state.jadwal.length],
@@ -89,19 +83,19 @@ export function PengaturanPage() {
 
       <Card className="border-[#f2cfcc]">
         <CardHeader
-          judul="Kembalikan data contoh"
-          keterangan="Menghapus semua perubahan pada peramban ini dan memuat ulang data demo awal."
+          judul="Kembalikan ke data awal"
+          keterangan="Menghapus semua perubahan dan memuat ulang data awal."
         />
         <Button varian="bahaya" className="mt-3" onClick={() => setKonfirmasiReset(true)}>
-          Reset data demo
+          Reset data
         </Button>
       </Card>
 
       <Dialog
         buka={konfirmasiReset}
         onTutup={() => setKonfirmasiReset(false)}
-        judul="Reset seluruh data demo?"
-        deskripsi="Jadwal, kehadiran, pertukaran, dan notifikasi yang Anda ubah akan dikembalikan ke data contoh awal. Tindakan ini tidak dapat dibatalkan."
+        judul="Reset seluruh data?"
+        deskripsi="Jadwal, kehadiran, pertukaran, dan notifikasi yang Anda ubah akan dikembalikan ke data awal. Tindakan ini tidak dapat dibatalkan."
         aksi={
           <>
             <Button onClick={() => setKonfirmasiReset(false)}>Batal</Button>
@@ -110,7 +104,7 @@ export function PengaturanPage() {
               onClick={() => {
                 reset();
                 setKonfirmasiReset(false);
-                tampilkanToast("Data demo dikembalikan ke kondisi awal.");
+                tampilkanToast("Data dikembalikan ke kondisi awal.");
               }}
             >
               Ya, reset

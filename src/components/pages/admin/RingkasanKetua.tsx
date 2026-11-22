@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/Badge";
 import { StatusKehadiranBadge, StatusPertukaranBadge } from "@/components/ui/Badges";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Dialog } from "@/components/ui/Dialog";
 import {
   TODAY,
@@ -69,7 +68,6 @@ export function RingkasanKetua() {
         </div>
       </div>
 
-      <DemoNotice />
 
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-4">
@@ -251,7 +249,7 @@ export function RingkasanKetua() {
           </Card>
 
           <Card>
-            <CardHeader judul="Aktivitas terbaru" keterangan="Seluruh perubahan tercatat pada data demo." />
+            <CardHeader judul="Aktivitas terbaru" keterangan="Seluruh perubahan tercatat di sini." />
             <ol className="mt-3 space-y-3">
               {aktivitas.length === 0 ? (
                 <li className="text-[13px] text-muted">Belum ada aktivitas.</li>

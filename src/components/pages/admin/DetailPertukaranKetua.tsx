@@ -22,7 +22,7 @@ export function DetailPertukaranKetua({ id }: { id: string }) {
       <div className="space-y-4">
         <Link href="/admin/pertukaran" className="text-[12.5px] text-muted hover:text-ink">← Pertukaran Jadwal</Link>
         <h1 className="text-[22px] font-semibold text-ink">Permohonan tidak ditemukan</h1>
-        <p className="text-[13px] text-muted">Permohonan {id} tidak ada pada data demo.</p>
+        <p className="text-[13px] text-muted">Permohonan {id} tidak ditemukan.</p>
         <ButtonLink href="/admin/pertukaran" varian="utama">Kembali ke daftar</ButtonLink>
       </div>
     );
@@ -231,7 +231,7 @@ export function DetailPertukaranKetua({ id }: { id: string }) {
         }
       >
         <ul className="space-y-1.5 text-[13px] text-ink">
-          <li>• Jadwal diperbarui otomatis pada data demo.</li>
+          <li>• Jadwal diperbarui otomatis.</li>
           <li>• Kedua warga menerima notifikasi.</li>
         </ul>
       </Dialog>

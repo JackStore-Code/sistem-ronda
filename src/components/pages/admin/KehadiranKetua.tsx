@@ -5,7 +5,6 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { StatusKehadiranBadge } from "@/components/ui/Badges";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Select } from "@/components/ui/Field";
 import { TODAY, formatTanggalPendek, formatJam, countStatusKehadiran } from "@/lib/format";
 import type { DetailJadwal, StatusKehadiran } from "@/lib/types";
@@ -76,7 +75,7 @@ export function KehadiranKetua() {
           <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted">Kehadiran</p>
           <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink">Catat & rekap kehadiran</h1>
           <p className="mt-1 text-[13px] text-muted">
-            Hanya Ketua RT yang dapat mengubah status kehadiran. Perubahan langsung tampil pada data demo.
+            Hanya Ketua RT yang dapat mengubah status kehadiran. Perubahan langsung tersimpan.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -114,7 +113,6 @@ export function KehadiranKetua() {
         </div>
       </div>
 
-      <DemoNotice ringkas />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <KotakRekap label="Hadir" nilai={rekap.hadir} nada="brand" />

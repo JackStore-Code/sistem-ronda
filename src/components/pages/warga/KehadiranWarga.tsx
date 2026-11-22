@@ -6,7 +6,6 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { StatusKehadiranBadge } from "@/components/ui/Badges";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Select } from "@/components/ui/Field";
 import { TODAY, formatJam, formatTanggalPendek } from "@/lib/format";
 
@@ -52,7 +51,6 @@ export function KehadiranWarga() {
         </Select>
       </div>
 
-      <DemoNotice ringkas />
 
       {riwayat.length === 0 ? (
         <EmptyState

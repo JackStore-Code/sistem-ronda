@@ -5,7 +5,6 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select } from "@/components/ui/Field";
 
@@ -96,7 +95,6 @@ export function DataWargaKetua() {
         </Button>
       </div>
 
-      <DemoNotice ringkas />
 
       <Card padding={false}>
         <div className="flex flex-col gap-2.5 border-b border-line p-4 sm:flex-row sm:items-center">

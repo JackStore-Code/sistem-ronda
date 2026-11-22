@@ -7,7 +7,6 @@ import { useDemo } from "@/components/providers/DemoProvider";
 import { StatusPertukaranBadge } from "@/components/ui/Badges";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { DemoNotice } from "@/components/ui/DemoNotice";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Select, Textarea } from "@/components/ui/Field";
 import { formatTanggalPendek, namaWarga } from "@/lib/format";
@@ -44,7 +43,6 @@ export function DaftarPertukaranWarga() {
         <ButtonLink href="/warga/pertukaran/baru" varian="utama">Ajukan pertukaran</ButtonLink>
       </div>
 
-      <DemoNotice ringkas />
 
       <div className="flex gap-1 rounded-lg border border-line bg-surface p-1" role="tablist" aria-label="Jenis pertukaran">
         {([
@@ -350,7 +348,7 @@ export function DetailPertukaranWarga({ id }: { id: string }) {
         <EmptyState
           ikon="swap"
           judul="Pengajuan tidak ditemukan"
-          deskripsi="Pengajuan ini tidak ada pada data demo atau sudah dihapus."
+          deskripsi="Pengajuan ini tidak ditemukan atau sudah dihapus."
           aksi={<ButtonLink href="/warga/pertukaran" ukuran="sm" varian="utama">Kembali</ButtonLink>}
         />
       </div>
@@ -439,7 +437,7 @@ export function DetailPertukaranWarga({ id }: { id: string }) {
               : p.status === "menunggu-validasi"
                 ? "Kedua warga sudah setuju. Menunggu validasi Ketua RT."
                 : p.status === "disetujui"
-                  ? "Pertukaran disetujui. Jadwal pada data demo sudah diperbarui."
+                  ? "Pertukaran disetujui. Jadwal sudah diperbarui."
                   : "Permohonan sudah selesai diproses."}
           </p>
           {bisaBatal ? (
