@@ -278,10 +278,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const tandaiDibaca = useCallback(
     async (id: string) => {
-      await supabase.from("notifikasi").update({ dibaca: true }).eq("id", id);
+      const { error } = await supabase.rpc("tandai_dibaca", {
+        token_sesi: token,
+        notif_id: id,
+      });
+      if (error) tampilkanToast(pesanGalat(error.message), "galat");
       await muat();
     },
-    [muat],
+    [token, muat, tampilkanToast],
   );
 
   const tandaiSemuaDibaca = useCallback(

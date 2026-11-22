@@ -29,7 +29,8 @@ export function NotifikasiPage() {
   const awalan = penggunaAktif.role === "ketua" ? "/admin" : "/warga";
 
   function buka(n: Notifikasi) {
-    tandaiDibaca(n.id);
+    // Hanya notifikasi yang diklik yang ditandai dibaca (bukan semua).
+    void tandaiDibaca(n.id);
     if (!n.tautan) return;
     const [target, id] = n.tautan.split("/");
     if (target === "ketua") {
@@ -55,11 +56,17 @@ export function NotifikasiPage() {
             Notifikasi {penggunaAktif.role === "ketua" ? "Ketua RT" : "warga"}
           </h1>
           <p className="mt-1 text-[13px] text-muted">
-            {belum > 0 ? `${belum} notifikasi belum dibaca` : "Semua notifikasi sudah dibaca"}
+            {belum > 0
+              ? `${belum} notifikasi belum dibaca — klik satu notifikasi untuk menandainya dibaca`
+              : "Semua notifikasi sudah dibaca"}
           </p>
         </div>
         {belum > 0 ? (
-          <Button varian="sekunder" onClick={() => tandaiSemuaDibaca(penggunaAktif.id)}>
+          <Button
+            varian="sekunder"
+            onClick={() => tandaiSemuaDibaca(penggunaAktif.id)}
+            title="Menandai seluruh notifikasi sebagai sudah dibaca"
+          >
             Tandai semua dibaca
           </Button>
         ) : null}
