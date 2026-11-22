@@ -62,6 +62,7 @@ export function FormJadwal({ jadwalId }: { jadwalId?: string }) {
       tanggal,
       waktuMulai: mulai,
       waktuSelesai: selesai,
+      lokasi,
       petugasIds: petugas,
       publikasikan: mode === "publikasi",
     });

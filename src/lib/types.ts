@@ -50,6 +50,8 @@ export type PertukaranJadwal = {
   divalidasiPada?: string;
   alasanPenolakan?: string;
   ditolakOleh?: "warga" | "ketua";
+  /** true bila persetujuan gagal diterapkan karena jadwal sudah berubah. */
+  gagalDiperbarui?: boolean;
 };
 
 export type KategoriNotifikasi =

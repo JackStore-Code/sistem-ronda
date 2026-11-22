@@ -28,6 +28,8 @@ type BuatJadwalInput = {
   tanggal: string;
   waktuMulai: string;
   waktuSelesai: string;
+  /** Kosong berarti memakai lokasi bawaan pos ronda RT. */
+  lokasi?: string;
   petugasIds: string[];
   publikasikan: boolean;
 };
@@ -57,7 +59,7 @@ type DemoContextValue = {
   ajukanPertukaran: (input: AjukanTukarInput) => { ok: boolean; id?: string; pesan?: string };
   tanggapiPertukaran: (id: string, setuju: boolean, alasanPenolakan?: string) => void;
   batalkanPertukaran: (id: string) => void;
-  validasiPertukaran: (id: string, setuju: boolean, alasanPenolakan?: string) => void;
+  validasiPertukaran: (id: string, setuju: boolean, alasanPenolakan?: string) => { ok: boolean; pesan?: string };
   // warga
   simpanWarga: (input: Omit<Pengguna, "id" | "role"> & { id?: string }) => void;
   // notifikasi
@@ -204,7 +206,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           tanggal: input.tanggal,
           waktuMulai: input.waktuMulai,
           waktuSelesai: input.waktuSelesai,
-          lokasi: "Pos ronda RT 05",
+          lokasi: input.lokasi?.trim() || "Pos ronda RT 05",
           status,
           dipublikasikanPada: input.publikasikan ? new Date().toISOString().slice(0, 16) : undefined,
         };
@@ -459,6 +461,23 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const validasiPertukaran = useCallback((id: string, setuju: boolean, alasanPenolakan?: string) => {
+    // Hasil dipakai halaman detail untuk memberi tahu Ketua RT bila jadwal sudah berubah.
+    const itemAwal = state.pertukaran.find((p) => p.id === id);
+    if (!itemAwal) return { ok: false, pesan: "Permohonan tidak ditemukan." };
+    if (setuju) {
+      const adaPemohon = state.detailJadwal.some(
+        (d) => d.jadwalId === itemAwal.jadwalAsalId && d.wargaId === itemAwal.pemohonId,
+      );
+      const adaTujuan = state.detailJadwal.some(
+        (d) => d.jadwalId === itemAwal.jadwalTujuanId && d.wargaId === itemAwal.wargaTujuanId,
+      );
+      if (!adaPemohon || !adaTujuan) {
+        return {
+          ok: false,
+          pesan: "Permohonan belum dapat diproses: petugas pada jadwal ini sudah berubah. Periksa kembali jadwal kedua warga.",
+        };
+      }
+    }
     setState((prev) => {
       const item = prev.pertukaran.find((p) => p.id === id);
       if (!item) return prev;
@@ -468,6 +487,27 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
       if (setuju) {
         // tukar tempat kedua petugas pada jadwal masing-masing
+        const adaPemohon = prev.detailJadwal.some(
+          (d) => d.jadwalId === item.jadwalAsalId && d.wargaId === item.pemohonId,
+        );
+        const adaTujuan = prev.detailJadwal.some(
+          (d) => d.jadwalId === item.jadwalTujuanId && d.wargaId === item.wargaTujuanId,
+        );
+        // Data jadwal bisa sudah berubah (petugas diganti/dihapus) sejak pengajuan dibuat.
+        // Mencatat "disetujui" tanpa mengubah jadwal akan menipu kedua pihak, jadi
+        // permohonan dikembalikan ke status menunggu validasi dan ditandai gagal.
+        if (!adaPemohon || !adaTujuan) {
+          return {
+            ...prev,
+            pertukaran: prev.pertukaran.map((p) =>
+              p.id === id ? { ...p, status: "menunggu-validasi" as const, gagalDiperbarui: true } : p,
+            ),
+            aktivitas: tambahAktivitas(
+              prev,
+              `Pertukaran ${item.id} belum dapat diproses: jadwal sudah berubah sejak pengajuan dibuat.`,
+            ),
+          };
+        }
         detailJadwal = prev.detailJadwal.map((d) => {
           if (d.jadwalId === item.jadwalAsalId && d.wargaId === item.pemohonId) {
             return { ...d, wargaId: item.wargaTujuanId };
@@ -484,6 +524,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           ? {
               ...p,
               status: (setuju ? "disetujui" : "ditolak") as PertukaranJadwal["status"],
+              gagalDiperbarui: undefined,
               divalidasiPada: new Date().toISOString().slice(0, 16),
               alasanPenolakan: setuju ? undefined : alasanPenolakan?.trim() || "Ditolak Ketua RT.",
               ditolakOleh: setuju ? undefined : ("ketua" as const),
@@ -528,7 +569,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       };
       return next;
     });
-  }, []);
+    return { ok: true };
+  }, [state.pertukaran, state.detailJadwal]);
 
   const simpanWarga = useCallback(
     (input: Omit<Pengguna, "id" | "role"> & { id?: string }) => {

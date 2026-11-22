@@ -216,9 +216,13 @@ export function DetailPertukaranKetua({ id }: { id: string }) {
             <Button
               varian="utama"
               onClick={() => {
-                validasiPertukaran(p.id, true);
+                const hasil = validasiPertukaran(p.id, true);
                 setAksi(null);
-                tampilkanToast("Pertukaran disetujui. Jadwal kedua warga diperbarui.");
+                if (hasil.ok) {
+                  tampilkanToast("Pertukaran disetujui. Jadwal kedua warga diperbarui.");
+                } else {
+                  tampilkanToast(hasil.pesan ?? "Permohonan belum dapat diproses.", "galat");
+                }
               }}
             >
               Ya, setujui
