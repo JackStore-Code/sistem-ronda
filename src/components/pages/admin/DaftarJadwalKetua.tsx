@@ -305,12 +305,12 @@ export function DaftarJadwalKetua() {
             <Button onClick={() => setHapusId(null)}>Batal</Button>
             <Button
               varian="bahaya"
-              onClick={() => {
-                if (hapusId) {
-                  hapusJadwal(hapusId);
-                  tampilkanToast("Jadwal dihapus.");
-                }
+              onClick={async () => {
+                if (!hapusId) return;
+                const hasil = await hapusJadwal(hapusId);
                 setHapusId(null);
+                if (hasil.ok) tampilkanToast("Jadwal dihapus.");
+                else tampilkanToast(hasil.pesan ?? "Jadwal gagal dihapus.", "galat");
               }}
             >
               Ya, hapus

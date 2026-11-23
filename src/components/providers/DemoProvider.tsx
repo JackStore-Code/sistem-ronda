@@ -40,7 +40,7 @@ type DemoContextValue = {
   pilihPengguna: (penggunaId: string) => void;
   simpanJadwal: (input: BuatJadwalInput) => Promise<Hasil>;
   publikasikanJadwal: (jadwalId: string) => Promise<void>;
-  hapusJadwal: (jadwalId: string) => Promise<void>;
+  hapusJadwal: (jadwalId: string) => Promise<Hasil>;
   catatKehadiran: (detailId: string, status: StatusKehadiran) => Promise<void>;
   ajukanPertukaran: (input: AjukanTukarInput) => Promise<Hasil>;
   tanggapiPertukaran: (kode: string, setuju: boolean, alasanPenolakan?: string) => Promise<Hasil>;
@@ -120,12 +120,18 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
 
   const hapusJadwal = useCallback(
-    async (jadwalId: string) => {
-      const { error } = await supabase.from("jadwal").delete().eq("id", jadwalId);
-      if (error) tampilkanToast(pesanGalat(error.message), "galat");
+    async (jadwalId: string): Promise<Hasil> => {
+      // Lewat fungsi database: peran diperiksa di server dan hasilnya dilaporkan
+      // apa adanya, supaya aplikasi tidak menampilkan "berhasil" palsu.
+      const { error } = await supabase.rpc("hapus_jadwal", {
+        token_sesi: token,
+        jadwal_id: jadwalId,
+      });
       await muat();
+      if (error) return { ok: false, pesan: pesanGalat(error.message) };
+      return { ok: true };
     },
-    [muat, tampilkanToast],
+    [token, muat],
   );
 
   const catatKehadiran = useCallback(
