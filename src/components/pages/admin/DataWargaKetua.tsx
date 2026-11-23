@@ -72,11 +72,11 @@ export function DataWargaKetua() {
 
     // Akun baru wajib punya kata sandi; saat mengedit boleh dikosongkan (tidak diubah).
     if (!form.id) {
-      if (form.kataSandi.trim().length < 6) g.kataSandi = "Kata sandi minimal 6 karakter.";
+      if (form.kataSandi.trim().length < 4) g.kataSandi = "Kata sandi minimal 4 karakter.";
       else if (!/^[a-z0-9]+$/.test(form.kataSandi.trim()))
         g.kataSandi = "Kata sandi hanya huruf kecil dan angka, tanpa spasi.";
     } else if (form.kataSandi.trim()) {
-      if (form.kataSandi.trim().length < 6) g.kataSandi = "Kata sandi minimal 6 karakter.";
+      if (form.kataSandi.trim().length < 4) g.kataSandi = "Kata sandi minimal 4 karakter.";
       else if (!/^[a-z0-9]+$/.test(form.kataSandi.trim()))
         g.kataSandi = "Kata sandi hanya huruf kecil dan angka, tanpa spasi.";
     }
@@ -84,7 +84,7 @@ export function DataWargaKetua() {
     // Ganti status aktif/nonaktif butuh konfirmasi sandi Ketua RT.
     const statusBerubah =
       Boolean(form.id) && state.pengguna.find((p) => p.id === form.id)?.statusAkun !== form.statusAkun;
-    if (statusBerubah && sandiKonfirmasi.trim().length < 6)
+    if (statusBerubah && sandiKonfirmasi.trim().length < 4)
       g.konfirmasi = "Masukkan kata sandi Anda untuk mengonfirmasi perubahan status akun.";
 
     setGalat(g);
@@ -148,7 +148,7 @@ export function DataWargaKetua() {
 
   async function jalankanHapus() {
     if (!hapus || menghapus) return;
-    if (sandiHapus.trim().length < 6) {
+    if (sandiHapus.trim().length < 4) {
       setGalatHapus("Masukkan kata sandi Ketua RT untuk menghapus akun.");
       return;
     }
