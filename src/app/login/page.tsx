@@ -65,9 +65,6 @@ export default function LoginPage() {
             {memproses ? "Memeriksa…" : "Masuk"}
           </Button>
         </form>
-        <div className="mt-5 rounded-lg border border-line bg-[#fbfcfa] p-3 text-xs leading-5 text-muted">
-          Username tidak peka huruf besar/kecil (fajar = Fajar). Sandi hanya huruf kecil dan angka. Akun Ketua RT dan akun warga terpisah.
-        </div>
       </section>
     </main>
     <ToastHost />
