@@ -11,6 +11,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Ronda Warga · RT 05 / RW 03 Sukamaju",
   manifest: "/manifest.webmanifest",
+  // Ikon tab browser (favicon) memakai ikon aplikasi, bukan globe bawaan browser.
+  icons: {
+    icon: [
+      { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/ikon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/ikon-192.png",
+  },
   appleWebApp: { capable: true, title: "Ronda Warga", statusBarStyle: "default" },
   description:
     "Sistem Informasi Manajemen Ronda Malam Berbasis Mobile untuk lingkungan RT.",
