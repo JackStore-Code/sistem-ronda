@@ -246,8 +246,10 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       if (!sesi?.penggunaId) return { ok: false, pesan: "Sesi sudah berakhir. Silakan masuk ulang." };
 
       // 1) Pastikan kata sandi yang diketik memang milik Ketua RT yang sedang masuk.
+      //    login() sekarang mencocokkan USERNAME dan membaca kolom `nama`, jadi
+      //    kirim username akun yang sedang masuk, bukan nama lengkapnya.
       const cek = await supabase.rpc("login", {
-        nama_lengkap: penggunaAktif.nama,
+        nama_lengkap: penggunaAktif.username.replace(/^@/, ""),
         kata_sandi: sandiKonfirmasi,
       });
       if (cek.error) return { ok: false, pesan: "Kata sandi Anda tidak cocok." };
