@@ -48,6 +48,7 @@ type DemoContextValue = {
   validasiPertukaran: (kode: string, setuju: boolean, alasanPenolakan?: string) => Promise<Hasil>;
   simpanWarga: (input: Omit<Pengguna, "id" | "role"> & { id?: string }) => Promise<Hasil>;
   ubahStatusWarga: (wargaId: string, status: "aktif" | "nonaktif", sandiKonfirmasi: string) => Promise<Hasil>;
+  hapusWarga: (wargaId: string, sandiKonfirmasi: string) => Promise<Hasil>;
   tandaiDibaca: (id: string) => Promise<void>;
   tandaiSemuaDibaca: (penerimaId: string) => Promise<void>;
   kirimPengingat: (jadwalId: string) => Promise<void>;
@@ -271,7 +272,26 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       if (error) return { ok: false, pesan: pesanGalat(error.message) };
       return { ok: true };
     },
-    [sesi, penggunaAktif.nama, muat],
+    [sesi, penggunaAktif.username, muat],
+  );
+
+  /**
+   * Menghapus akun warga. Wajib disertai kata sandi Ketua RT; pemeriksaan
+   * ada di server (hapus_warga) sehingga tidak bisa dilewati dari browser.
+   */
+  const hapusWarga = useCallback(
+    async (wargaId: string, sandiKonfirmasi: string): Promise<Hasil> => {
+      if (!sesi?.penggunaId) return { ok: false, pesan: "Sesi sudah berakhir. Silakan masuk ulang." };
+      const { error } = await supabase.rpc("hapus_warga", {
+        token_sesi: sesi.token,
+        warga_id: wargaId,
+        sandi_ketua: sandiKonfirmasi,
+      });
+      await muat();
+      if (error) return { ok: false, pesan: pesanGalat(error.message) };
+      return { ok: true };
+    },
+    [sesi, muat],
   );
 
   const tandaiDibaca = useCallback(
@@ -343,6 +363,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     validasiPertukaran,
     simpanWarga,
     ubahStatusWarga,
+    hapusWarga,
     tandaiDibaca,
     tandaiSemuaDibaca,
     kirimPengingat,

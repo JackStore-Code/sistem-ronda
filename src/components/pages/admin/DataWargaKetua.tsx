@@ -14,7 +14,7 @@ export function usernameDariNama(nama: string) {
 }
 
 export function DataWargaKetua() {
-  const { state, simpanWarga, ubahStatusWarga, tampilkanToast } = useDemo();
+  const { state, simpanWarga, ubahStatusWarga, hapusWarga, tampilkanToast } = useDemo();
   const [cari, setCari] = useState("");
   const [status, setStatus] = useState<"semua" | "aktif" | "nonaktif">("semua");
   const [form, setForm] = useState<null | { id?: string; nama: string; kataSandi: string; noHp: string; statusAkun: "aktif" | "nonaktif" }>(null);
@@ -22,6 +22,12 @@ export function DataWargaKetua() {
   // Status akun hanya boleh diubah setelah Ketua RT mengonfirmasi dengan sandinya.
   const [sandiKonfirmasi, setSandiKonfirmasi] = useState("");
   const [menyimpan, setMenyimpan] = useState(false);
+  // Dialog hapus akun: butuh kata sandi Ketua RT dan pengetikan nama warga.
+  const [hapus, setHapus] = useState<null | { wargaId: string; nama: string }>(null);
+  const [sandiHapus, setSandiHapus] = useState("");
+  const [ketikHapus, setKetikHapus] = useState("");
+  const [galatHapus, setGalatHapus] = useState("");
+  const [menghapus, setMenghapus] = useState(false);
 
   const daftar = useMemo(() => {
     const q = cari.trim().toLowerCase();
@@ -130,6 +136,35 @@ export function DataWargaKetua() {
       return;
     }
     tampilkanToast(form.id ? `Data ${namaBaru} diperbarui.` : `${namaBaru} ditambahkan sebagai warga.`);
+    setForm(null);
+  }
+
+  function bukaHapus(wargaId: string, nama: string) {
+    setHapus({ wargaId, nama });
+    setSandiHapus("");
+    setKetikHapus("");
+    setGalatHapus("");
+  }
+
+  async function jalankanHapus() {
+    if (!hapus || menghapus) return;
+    if (sandiHapus.trim().length < 6) {
+      setGalatHapus("Masukkan kata sandi Ketua RT untuk menghapus akun.");
+      return;
+    }
+    if (ketikHapus.trim().toLowerCase() !== hapus.nama.trim().toLowerCase()) {
+      setGalatHapus("Nama yang diketik belum sama dengan nama warga.");
+      return;
+    }
+    setMenghapus(true);
+    const hasil = await hapusWarga(hapus.wargaId, sandiHapus);
+    setMenghapus(false);
+    if (!hasil.ok) {
+      setGalatHapus(hasil.pesan ?? "Akun gagal dihapus.");
+      return;
+    }
+    tampilkanToast(`Akun ${hapus.nama} dihapus.`);
+    setHapus(null);
     setForm(null);
   }
 
@@ -265,6 +300,16 @@ export function DataWargaKetua() {
         deskripsi="Data ini hanya terlihat oleh Ketua RT. Warga tidak dapat menambah anggota sendiri."
         aksi={
           <>
+            {form?.id ? (
+              <Button
+                varian="bahaya"
+                className="sm:mr-auto"
+                onClick={() => bukaHapus(form.id!, form.nama)}
+                disabled={menyimpan}
+              >
+                Hapus akun
+              </Button>
+            ) : null}
             <Button onClick={() => setForm(null)} disabled={menyimpan}>
               Batal
             </Button>
@@ -355,6 +400,60 @@ export function DataWargaKetua() {
             ) : null}
           </div>
         ) : null}
+      </Dialog>
+
+      <Dialog
+        buka={hapus !== null}
+        onTutup={() => setHapus(null)}
+        judul="Hapus akun warga?"
+        deskripsi={
+          <>
+            Akun <strong className="font-semibold text-ink">{hapus?.nama}</strong> akan dihapus
+            permanen beserta notifikasi dan permohonan tukarnya. Tindakan ini tidak bisa dibatalkan.
+            Bila warga hanya berhenti sementara, gunakan status Nonaktif.
+          </>
+        }
+        aksi={
+          <>
+            <Button onClick={() => setHapus(null)} disabled={menghapus}>
+              Batal
+            </Button>
+            <Button varian="bahaya" onClick={jalankanHapus} disabled={menghapus}>
+              {menghapus ? "Menghapus…" : "Hapus permanen"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          {galatHapus ? (
+            <p role="alert" className="rounded-lg border border-[#f2cfcc] bg-danger-soft px-3 py-2 text-[12.5px] font-medium text-danger">
+              {galatHapus}
+            </p>
+          ) : null}
+          <Field
+            id="ketik-hapus"
+            label="Ketik nama warga untuk konfirmasi"
+            wajib
+            petunjuk="harus sama dengan nama lengkap akun yang akan dihapus"
+          >
+            <Input
+              id="ketik-hapus"
+              value={ketikHapus}
+              onChange={(e) => setKetikHapus(e.target.value)}
+              placeholder={hapus?.nama ?? ""}
+            />
+          </Field>
+          <Field id="sandi-hapus" label="Kata sandi Ketua RT" wajib>
+            <Input
+              id="sandi-hapus"
+              type="password"
+              value={sandiHapus}
+              onChange={(e) => setSandiHapus(e.target.value)}
+              placeholder="Kata sandi akun Ketua RT"
+              autoComplete="current-password"
+            />
+          </Field>
+        </div>
       </Dialog>
     </div>
   );
