@@ -44,7 +44,9 @@ export function DaftarJadwalKetua() {
           .join(" ");
         return tanggal.includes(q) || petugas.includes(q) || j.lokasi.toLowerCase().includes(q);
       })
-      .sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+      // Urutan untuk Ketua RT: tanggal terdekat (hari-H) di paling atas,
+      // tanggal terjauh turun ke bawah.
+      .sort((a, b) => a.tanggal.localeCompare(b.tanggal));
   }, [state, cari, filter, bulan]);
 
   const draft = state.jadwal.filter((j) => j.status === "draft").length;
