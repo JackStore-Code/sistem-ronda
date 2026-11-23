@@ -59,6 +59,11 @@ type DemoContextValue = {
 
 const DemoContext = createContext<DemoContextValue | null>(null);
 
+/** Username akun baru: nama depan, huruf kecil, tanpa tanda @. */
+function usernameDariNama(nama: string) {
+  return nama.trim().split(" ")[0].toLowerCase().replace(/[^a-z0-9._]/g, "");
+}
+
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const { data, sesi, siap, galat, penggunaAktif, wargaAktif, masuk, keluar, muat } = useDataSupabase();
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -198,31 +203,25 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const simpanWarga = useCallback(
     async (input: Omit<Pengguna, "id" | "role"> & { id?: string }): Promise<Hasil> => {
-      if (input.id) {
-        const { error } = await supabase.rpc("ubah_warga", {
-          token_sesi: token,
-          warga_id: input.id,
-          nama_baru: input.nama,
-          no_hp_baru: input.noHp,
-          status_baru: input.statusAkun,
-          // Kosong berarti kata sandi / username tidak diubah.
-          sandi_baru: input.kataSandi.trim() ? input.kataSandi.trim().toLowerCase() : null,
-        });
-        await muat();
-        if (error) {
-          const pesan = pesanGalat(error.message);
-          tampilkanToast(pesan, "galat");
-          return { ok: false, pesan };
-        }
-        return { ok: true };
-      }
-
-      const { error } = await supabase.rpc("tambah_warga", {
-        token_sesi: token,
-        nama_baru: input.nama,
-        sandi_baru: input.kataSandi,
-        no_hp: input.noHp,
-      });
+      // username_ignore: aplikasi tidak pernah mengubah username lewat form ini.
+      // (Fungsi database juga dibuat ignore_dulu: true.)
+      const { error } = input.id
+        ? await supabase.rpc("ubah_warga", {
+            token_sesi: token,
+            warga_id: input.id,
+            nama_baru: input.nama,
+            no_hp_baru: input.noHp,
+            status_baru: input.statusAkun,
+            // Kosong berarti kata sandi tidak diubah.
+            sandi_baru: input.kataSandi.trim() ? input.kataSandi.trim().toLowerCase() : null,
+          })
+        : await supabase.rpc("tambah_warga", {
+            token_sesi: token,
+            nama_baru: input.nama,
+            sandi_baru: input.kataSandi,
+            no_hp: input.noHp,
+            username_baru: usernameDariNama(input.nama),
+          });
       await muat();
       if (error) {
         const pesan = pesanGalat(error.message);
