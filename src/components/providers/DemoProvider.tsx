@@ -252,18 +252,15 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     ): Promise<Hasil> => {
       if (!sesi?.penggunaId) return { ok: false, pesan: "Sesi sudah berakhir. Silakan masuk ulang." };
 
-      // 1) Pastikan kata sandi yang diketik memang milik Ketua RT yang sedang masuk.
-      //    login() sekarang mencocokkan USERNAME dan membaca kolom `nama`, jadi
-      //    kirim username akun yang sedang masuk, bukan nama lengkapnya.
-      const cek = await supabase.rpc("login", {
-        nama_lengkap: penggunaAktif.username.replace(/^@/, ""),
-        kata_sandi: sandiKonfirmasi,
+      // 1) Verifikasi langsung di server: sandi milik Ketua RT PEMILIK SESI.
+      //    Cara lama memanggil login() dari browser sehingga bisa tertukar
+      //    dengan sesi pengguna lain yang terbuka di tab berbeda.
+      const cek = await supabase.rpc("verifikasi_sandi_ketua", {
+        token_sesi: sesi.token,
+        sandi: sandiKonfirmasi,
       });
-      if (cek.error) return { ok: false, pesan: "Kata sandi Anda tidak cocok." };
-      const baris = (cek.data as { pengguna_id: string; role: string }[])?.[0];
-      if (!baris || baris.pengguna_id !== sesi.penggunaId || baris.role !== "ketua") {
-        return { ok: false, pesan: "Kata sandi Anda tidak cocok." };
-      }
+      if (cek.error) return { ok: false, pesan: pesanGalat(cek.error.message) };
+      if (cek.data !== true) return { ok: false, pesan: "Kata sandi Anda tidak cocok." };
 
       // 2) Simpan perubahan status lewat fungsi database.
       const { error } = await supabase.rpc("ubah_warga", {
@@ -278,7 +275,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       if (error) return { ok: false, pesan: pesanGalat(error.message) };
       return { ok: true };
     },
-    [sesi, penggunaAktif.username, muat],
+    [sesi, muat],
   );
 
   /**
