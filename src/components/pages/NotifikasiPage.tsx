@@ -135,7 +135,7 @@ export function NotifikasiPage() {
       )}
 
       <p className="px-1 text-[12px] leading-4 text-muted">
-        Notifikasi tampil langsung di aplikasi begitu ada kejadian baru (realtime). Pengiriman WhatsApp atau SMS belum aktif.
+        Notifikasi tampil langsung di aplikasi begitu ada kejadian baru (realtime).
       </p>
     </div>
   );
