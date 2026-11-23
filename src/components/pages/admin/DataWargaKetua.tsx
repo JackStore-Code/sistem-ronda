@@ -8,6 +8,11 @@ import { Card, EmptyState } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select } from "@/components/ui/Field";
 
+/** Username untuk akun baru: nama depan, huruf kecil, tanpa tanda @. */
+export function usernameDariNama(nama: string) {
+  return nama.trim().split(" ")[0].toLowerCase().replace(/[^a-z0-9._]/g, "");
+}
+
 export function DataWargaKetua() {
   const { state, simpanWarga, ubahStatusWarga, tampilkanToast } = useDemo();
   const [cari, setCari] = useState("");
@@ -98,7 +103,7 @@ export function DataWargaKetua() {
         await simpanWarga({
           id: form.id,
           nama: namaBaruStatus,
-          username: `@${namaBaruStatus.split(" ")[0].toLowerCase()}`,
+          username: usernameDariNama(namaBaruStatus),
           kataSandi: form.kataSandi.trim(),
           noHp: form.noHp.trim(),
           statusAkun: form.statusAkun,
@@ -114,7 +119,7 @@ export function DataWargaKetua() {
     const hasil = await simpanWarga({
       id: form.id,
       nama: namaBaru,
-      username: `@${namaBaru.split(" ")[0].toLowerCase()}`,
+      username: usernameDariNama(namaBaru),
       kataSandi: form.kataSandi.trim(),
       noHp: form.noHp.trim(),
       statusAkun: form.statusAkun,
