@@ -27,6 +27,7 @@ export function DataWargaKetua() {
         if (!q) return true;
         return (
           p.nama.toLowerCase().includes(q) ||
+          p.username.toLowerCase().includes(q) ||
           p.noHp.includes(q)
         );
       })
@@ -56,7 +57,7 @@ export function DataWargaKetua() {
 
     const rapikan = (v: string) => v.trim().replace(/\s+/g, " ").toLowerCase();
     const dup = state.pengguna.find((p) => rapikan(p.nama) === rapikan(form.nama) && p.id !== form.id);
-    if (dup) g.nama = "Nama lengkap ini sudah dipakai akun lain — nama dipakai untuk login.";
+    if (dup) g.nama = "Nama lengkap ini sudah dipakai akun lain.";
 
     // Akun baru wajib punya kata sandi; saat mengedit boleh dikosongkan (tidak diubah).
     if (!form.id) {
@@ -202,7 +203,7 @@ export function DataWargaKetua() {
                           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-[11.5px] font-semibold text-brand">
                             {w.nama.split(" ").slice(0, 2).map((s) => s[0]).join("")}
                           </span>
-                          <span className="text-[13.5px] font-medium text-ink">{w.nama}</span>
+                          <span className="min-w-0"><span className="block text-[13.5px] font-medium text-ink">{w.nama}</span><span className="block font-mono text-[12px] text-muted">{w.username}</span></span>
                         </div>
                       </td>
                       <td className="px-4 py-3 font-mono text-[13px] text-[#41504a]">{w.kataSandi}</td>
@@ -234,7 +235,7 @@ export function DataWargaKetua() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13.5px] font-medium text-ink">{w.nama}</p>
                     <p className="text-[12px] text-muted">
-                      Sandi <span className="font-mono">{w.kataSandi}</span> · {w.noHp}
+                      <span className="font-mono">{w.username}</span> · Sandi <span className="font-mono">{w.kataSandi}</span> · {w.noHp}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
@@ -275,7 +276,7 @@ export function DataWargaKetua() {
                 {galat.umum}
               </p>
             ) : null}
-            <Field id="nama-warga" label="Nama lengkap (dipakai login)" wajib galat={galat.nama}>
+            <Field id="nama-warga" label="Nama lengkap" wajib galat={galat.nama}>
               <Input
                 id="nama-warga"
                 value={form.nama}
@@ -293,7 +294,7 @@ export function DataWargaKetua() {
                 petunjuk={
                   form.id
                     ? "kosongkan bila tidak ingin mengganti sandi"
-                    : "huruf kecil & angka, dipakai bersama nama lengkap"
+                    : "huruf kecil & angka, dipakai bersama username akun"
                 }
               >
                 <Input

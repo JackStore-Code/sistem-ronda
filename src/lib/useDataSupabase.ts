@@ -276,7 +276,7 @@ export function useDataSupabase() {
       });
       if (error) return { ok: false, pesan: error.message };
       const baris = (hasil as { token: string; pengguna_id: string; nama: string; role: string }[])?.[0];
-      if (!baris) return { ok: false, pesan: "Nama lengkap atau kata sandi tidak cocok" };
+      if (!baris) return { ok: false, pesan: "Username atau kata sandi tidak cocok" };
       const s: SesiAktif = {
         token: baris.token,
         penggunaId: baris.pengguna_id,

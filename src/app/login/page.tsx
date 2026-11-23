@@ -29,7 +29,7 @@ export default function LoginPage() {
     const hasil = await masukAkun(nama, password);
     setMemproses(false);
     if (!hasil.ok) {
-      const pesan = hasil.pesan ?? "Nama lengkap atau kata sandi tidak cocok.";
+      const pesan = hasil.pesan ?? "Username atau kata sandi tidak cocok.";
       setPesanGalat(pesan);
       tampilkanToast(pesan, "galat");
       return;
@@ -48,10 +48,10 @@ export default function LoginPage() {
           <div><p className="text-lg font-semibold text-ink">Ronda Warga</p><p className="text-sm text-muted">RT 05 / RW 03 Sukamaju</p></div>
         </div>
         <h1 className="text-2xl font-semibold text-ink">Masuk ke akun</h1>
-        <p className="mt-1 text-sm text-muted">Tulis nama lengkap sesuai data warga, lalu kata sandi akun Anda.</p>
+        <p className="mt-1 text-sm text-muted">Tulis username akun Anda, lalu kata sandi.</p>
         <form onSubmit={masuk} className="mt-6 space-y-4" noValidate>
-          <Field id="nama-login" label="Nama lengkap" wajib>
-            <Input id="nama-login" autoComplete="name" autoCapitalize="words" value={nama} onChange={(e) => { setNama(e.target.value); setPesanGalat(""); }} placeholder="Masukkan nama lengkap" required />
+          <Field id="nama-login" label="Username" wajib>
+            <Input id="nama-login" autoComplete="username" autoCapitalize="none" value={nama} onChange={(e) => { setNama(e.target.value); setPesanGalat(""); }} placeholder="contoh: fajar" required />
           </Field>
           <Field id="password-login" label="Kata sandi" wajib>
             <Input id="password-login" type="password" autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setPesanGalat(""); }} placeholder="Kata sandi akun" required />
@@ -66,7 +66,7 @@ export default function LoginPage() {
           </Button>
         </form>
         <div className="mt-5 rounded-lg border border-line bg-[#fbfcfa] p-3 text-xs leading-5 text-muted">
-          Nama lengkap wajib ditulis utuh; huruf besar/kecil dan spasi ganda tidak berpengaruh. Akun Ketua RT dan akun warga terpisah.
+          Username tidak peka huruf besar/kecil (fajar = Fajar). Sandi hanya huruf kecil dan angka. Akun Ketua RT dan akun warga terpisah.
         </div>
       </section>
     </main>

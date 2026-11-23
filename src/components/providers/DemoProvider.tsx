@@ -205,7 +205,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           nama_baru: input.nama,
           no_hp_baru: input.noHp,
           status_baru: input.statusAkun,
-          // Kosong berarti kata sandi tidak diubah.
+          // Kosong berarti kata sandi / username tidak diubah.
           sandi_baru: input.kataSandi.trim() ? input.kataSandi.trim().toLowerCase() : null,
         });
         await muat();
