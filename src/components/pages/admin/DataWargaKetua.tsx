@@ -8,9 +8,20 @@ import { Card, EmptyState } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Select } from "@/components/ui/Field";
 
-/** Username untuk akun baru: nama depan, huruf kecil, tanpa tanda @. */
+/**
+ * Username untuk akun baru: NAMA DEPAN saja, huruf kecil, tanpa tanda @.
+ * Contoh: "Fauzi Akbar Maulana" -> "fauzi".
+ *
+ * Bila nama depan sudah dipakai akun lain, fungsi di database akan menolak
+ * dengan pesan "Username sudah dipakai akun lain" — Ketua RT perlu memilih
+ * nama panggilan lain yang khas (mis. "fauzi2").
+ */
 export function usernameDariNama(nama: string) {
-  return nama.trim().split(" ")[0].toLowerCase().replace(/[^a-z0-9._]/g, "");
+  return nama
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)[0]
+    .replace(/[^a-z0-9._]/g, "");
 }
 
 export function DataWargaKetua() {
@@ -132,7 +143,13 @@ export function DataWargaKetua() {
     });
     setMenyimpan(false);
     if (!hasil.ok) {
-      setGalat({ umum: hasil.pesan ?? "Perubahan gagal disimpan." });
+      // Pesan dari server ditempel pada kolom yang paling mungkin jadi sebabnya,
+      // supaya kegagalan tidak lagi tampil sebagai formulir yang "diam saja".
+      const pesan = hasil.pesan ?? "Perubahan gagal disimpan.";
+      if (/kata sandi|sandi/i.test(pesan)) setGalat({ kataSandi: pesan });
+      else if (/username/i.test(pesan)) setGalat({ nama: pesan });
+      else if (/nomor hp|no_hp|no hp/i.test(pesan)) setGalat({ noHp: pesan });
+      else setGalat({ umum: pesan });
       return;
     }
     tampilkanToast(form.id ? `Data ${namaBaru} diperbarui.` : `${namaBaru} ditambahkan sebagai warga.`);

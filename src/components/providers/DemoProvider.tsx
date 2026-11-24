@@ -60,9 +60,20 @@ type DemoContextValue = {
 
 const DemoContext = createContext<DemoContextValue | null>(null);
 
-/** Username akun baru: nama depan, huruf kecil, tanpa tanda @. */
-function usernameDariNama(nama: string) {
-  return nama.trim().split(" ")[0].toLowerCase().replace(/[^a-z0-9._]/g, "");
+/**
+ * Username untuk akun baru: NAMA DEPAN saja, huruf kecil, tanpa tanda @.
+ * Contoh: "Fauzi Akbar Maulana" -> "fauzi".
+ *
+ * Bila nama depan sudah dipakai akun lain, fungsi di database akan menolak
+ * dengan pesan "Username sudah dipakai akun lain" — Ketua RT perlu memilih
+ * nama panggilan lain yang khas (mis. "fauzi2").
+ */
+export function usernameDariNama(nama: string) {
+  return nama
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)[0]
+    .replace(/[^a-z0-9._]/g, "");
 }
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
